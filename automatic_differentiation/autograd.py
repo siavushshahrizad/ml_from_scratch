@@ -7,8 +7,6 @@
 # that allows reverse-mode autodifferentiation
 # or backpropagation for scalars.
 
-# TODO: Add Graphviz visualstion of the computational graph
-
 
 import graphviz
 
@@ -25,11 +23,34 @@ class Gradient():
         self._operation = _operation
 
 
+    def __add__(self, addendend):
+        assert isinstance(addendend, Gradient),"The two numbers need to be wrapped in the Gradient class"
+        sum = Gradient(self.value + addendend.value, (self, addendend), "+")
+
+        def _backward():
+            return 1
+
+        sum._backward = _backward
+        return sum
+        
+
+    def __mul__(self, factor):
+        assert isinstance(addendend, Gradient), "The two numbers need to be wrapped in the Gradient class"
+        product = Gradient(self.value * factor.value), (self, factor)
+
+        def _backward():
+            return factor
+
+        product._backward = _backward
+        return product
+            
+
     def __pow__(self, exponent):
+        assert isinstance(exponent, (int, float)), "The class can only handle int/float exponents"
         result = Gradient(self.value**exponent, (self,), f"**{exponent}")
 
         def _backward():
-            pass
+            return (exponent * self.value ** (exponent - 1)) * 1
         result._backward = _backward
         return result
 
