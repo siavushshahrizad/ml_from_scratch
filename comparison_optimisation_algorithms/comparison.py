@@ -13,7 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_california_housing
 from utils import (
-    forward_pass
+    add_bias,
+    forward_pass,
+    mean_squared_error
 )
 
 
@@ -42,9 +44,13 @@ def run_comparison(X, y):
     results = []
     for num in NUM_PREDICTORS_TO_USE:
         curr_df =  X[:, 0:num]
+        curr_df = add_bias(curr_df)
 
-        w = np.random.random(num)
+        w = np.random.random(curr_df.shape[1])     # Accounts for added bias term
         y_hat = forward_pass(y, w)
+        cost = mean_squared_error(y, y_hat)
+
+
         print(w)
 
     return results

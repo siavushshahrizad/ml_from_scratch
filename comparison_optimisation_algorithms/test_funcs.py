@@ -12,7 +12,8 @@ import pytest
 import numpy as np
 from utils import (
     add_bias,
-    forward_pass
+    forward_pass,
+    mean_squared_error
 )
 
 
@@ -35,6 +36,15 @@ class TestClass:
         print(X_prime)
         assert X_prime.shape[1] == X.shape[1] + 1
         assert np.array_equal(X_prime, expected)
+
+    def test_mean_squared_error(self):
+        y = np.array([2, 3, 2, 5])
+        y_hat = np.array([1, 10, 2, 5])
+        cost = mean_squared_error(y, y_hat)
+        expected = 6.25
+        assert cost == expected
+
+
 
 
 
