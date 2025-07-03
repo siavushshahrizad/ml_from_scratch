@@ -24,3 +24,6 @@ def forward_pass(X, w):
 def mean_squared_error(y, y_hat):
     m = y.shape[0]
     return 0.5 * (np.sum(np.square(y - y_hat)) / m)
+
+def normal_equations():
+
