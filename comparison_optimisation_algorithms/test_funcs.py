@@ -17,7 +17,10 @@ from utils import (
     forward_pass,
     mean_squared_error,
     closed_form_solution,
-    measure_time_for_weights
+    measure_time_for_weights,
+    simulate_closed_form_solution,
+    gradient_descent,
+    simulate_gradient_descent
 )
 
 
@@ -86,9 +89,55 @@ class TestClass:
         assert isinstance(toy_weights, np.ndarray)
         assert toy_weights.shape[0] == toy_y.shape[0]
 
-
-
-
-
+    def test_simulate_closed_form_solution(self):
+        X_train = np.random.randn(10, 3)
+        y_train = np.random.randn(10)
+        X_test = np.random.randn(5, 3)
+        y_test = np.random.randn(5)
         
+        time_needed, loss = simulate_closed_form_solution(
+            X_train,
+            X_test,
+            y_train,
+            y_test
+        )
+
+        assert isinstance(time_needed, float)
+        assert time_needed > 0
+        assert isinstance(loss, float)
+        assert loss > 0
+
+    def test_gradient_descent(self):
+        X = np.random.randn(20, 4)
+        y = np.random.randn(20)
+        w_random = np.random.randn(4)
+        w_trained = gradient_descent(X, y)
+
+        assert isinstance(w_trained, np.ndarray)
+        assert w_trained.shape[0] == X.shape[1]
+
+        random_preds = forward_pass(X, w_random)
+        trained_preds = forward_pass(X, w_trained)
+        random_loss = mean_squared_error(y, random_preds)
+        trained_loss = mean_squared_error(y, trained_preds)
+
+        assert trained_loss < random_loss
+
+    def test_simulate_gradient_descent(self):
+        X_train = np.random.randn(10, 2)
+        X_test = np.random.randn(7, 2)
+        y_train = np.random.randn(10)
+        y_test = np.random.randn(7)
+
+        time_needed, loss = simulate_gradient_descent(
+            X_train,
+            X_test,
+            y_train,
+            y_test
+        )
+
+        assert isinstance(time_needed, float)
+        assert time_needed > 0
+        assert isinstance(loss, float)
+        assert loss > 0
 
