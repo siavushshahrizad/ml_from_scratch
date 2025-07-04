@@ -17,9 +17,11 @@ from utils import (
 )
 
 
+NUM_PREDICTORS_TO_USE = [1, 8, 50, 100, 200, 500]
+
 def main():
     X, y = load_and_clean_data()
-    results = run_comparison(X, y)
+    results = run_comparison(X, y, NUM_PREDICTORS_TO_USE)
 
 
 if __name__ == "__main__":

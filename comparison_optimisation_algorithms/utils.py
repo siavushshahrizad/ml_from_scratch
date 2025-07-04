@@ -126,7 +126,7 @@ def simulate_gradient_descent(X_train, X_test, y_train, y_test):
     test_loss = mean_squared_error(y_test, y_hat_test)
     return time_needed, test_loss
         
-def run_comparison(X, y):
+def run_comparison(X, y, predictors_to_use=[1]):
     """
     Func takes numpy arrays of features and the targets.
     It then simulates two optimisation methods, returning
@@ -138,7 +138,7 @@ def run_comparison(X, y):
     results_closed_form = []
     results_gradient_descent = []
     
-    for num in NUM_PREDICTORS_TO_USE:
+    for num in predictors_to_use:
         X_train =  X[:cutoff, 0:num]
         X_test = X[cutoff:, 0:num]
         y_train = y[:cutoff]

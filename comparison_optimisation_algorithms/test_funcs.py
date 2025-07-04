@@ -28,12 +28,27 @@ np.random.seed(42)
 
 
 class TestClass:
-    def test_add_bias(self):
+    @pytest.fixture
+    def generate_random_data(self):
+        n = 100
+        m = 10
+        X = np.random.randn(n, m)
+        y = np.random.randn(n)
+        w = np.random.randn(m)
+        return X, y, w
+    
+    @pytest.fixture
+    def generate_static_data(self):
+        X = np.array([[1, 2, 3], [4, 5, 6]])
+        w = np.array([2, 3, 10])
+        return X, w
+        
+    def test_add_bias(self, generate_static_data):
         """
         Tests if bias terms are correctly 
         added to the beginning of reach row.
         """
-        X = np.array([[1, 2, 3], [4, 5, 6]])
+        X, _ = generate_static_data
         X_prime = add_bias(X)
         expected = np.array([[1, 1,  2, 3], [1, 4, 5, 6]])
         assert X_prime.shape[1] == X.shape[1] + 1
@@ -46,9 +61,8 @@ class TestClass:
         assert y.shape[0] == X.shape[0]
         assert X.shape[1] == MAX_PREDICTORS + 1
 
-    def test_forward_pass(self):
-        X = np.array([[1, 2, 3], [4, 5, 6]])
-        w = np.array([2, 3, 10])
+    def test_forward_pass(self, generate_static_data):
+        X, w = generate_static_data
         expected = np.array([38, 83])
         result = forward_pass(X, w)
         assert np.array_equal(expected, result)
@@ -60,10 +74,8 @@ class TestClass:
         expected = 6.25
         assert cost == expected
 
-    def test_closed_form_solution(self):
-        X = np.random.randn(400,5)
-        y = np.random.randn(400)
-        random_w = np.random.randn(5)
+    def test_closed_form_solution(self, generate_random_data):
+        X, y, random_w = generate_random_data
         optimised_w = closed_form_solution(X, y)
 
         random_predictions = forward_pass(X, random_w)
@@ -74,27 +86,24 @@ class TestClass:
 
         assert optimised_cost < random_cost 
 
-    def test_measure_time_for_weights(self):
-        toy_X = np.random.rand(10, 3)
-        toy_y  = np.random.rand(10)
+    def test_measure_time_for_weights(self, generate_random_data):
+        X, y, _ = generate_random_data
 
         def create_toy_weights(X, y):
             toy_weights = y * 2
             return toy_weights 
 
-        time_needed, toy_weights  = measure_time_for_weights(create_toy_weights, toy_X, toy_y)
+        time_needed, toy_weights  = measure_time_for_weights(create_toy_weights, X, y)
 
         assert isinstance(time_needed, float)
         assert time_needed > 0
         assert isinstance(toy_weights, np.ndarray)
-        assert toy_weights.shape[0] == toy_y.shape[0]
+        assert toy_weights.shape[0] == y.shape[0]
 
-    def test_simulate_closed_form_solution(self):
-        X_train = np.random.randn(10, 3)
-        y_train = np.random.randn(10)
-        X_test = np.random.randn(5, 3)
-        y_test = np.random.randn(5)
-        
+    def test_simulate_closed_form_solution(self, generate_random_data):
+        X_train, y_train, _ = generate_random_data
+        X_test, y_test, _ = generate_random_data
+
         time_needed, loss = simulate_closed_form_solution(
             X_train,
             X_test,
@@ -107,10 +116,8 @@ class TestClass:
         assert isinstance(loss, float)
         assert loss > 0
 
-    def test_gradient_descent(self):
-        X = np.random.randn(20, 4)
-        y = np.random.randn(20)
-        w_random = np.random.randn(4)
+    def test_gradient_descent(self, generate_random_data):
+        X, y, w_random = generate_random_data
         w_trained = gradient_descent(X, y)
 
         assert isinstance(w_trained, np.ndarray)
@@ -123,11 +130,9 @@ class TestClass:
 
         assert trained_loss < random_loss
 
-    def test_simulate_gradient_descent(self):
-        X_train = np.random.randn(10, 2)
-        X_test = np.random.randn(7, 2)
-        y_train = np.random.randn(10)
-        y_test = np.random.randn(7)
+    def test_simulate_gradient_descent(self, generate_random_data):
+        X_train, y_train, _ = generate_random_data
+        X_test, y_test, _ = generate_random_data
 
         time_needed, loss = simulate_gradient_descent(
             X_train,
