@@ -18,15 +18,14 @@ from utils import (
 )
 
 
-NUM_PREDICTORS_TO_USE = [1, 8, 50, 100, 200, 500]
+NUM_PREDICTORS_TO_USE = [100, 500, 1000, 5000, 10000]
 
 def main():
     X, y = load_and_clean_data()
-    # results = run_comparison(X, y, NUM_PREDICTORS_TO_USE)
-    results_cf, results_gd = run_comparison(X, y) 
-    save_plotted_time(results_cf, results_gd)
-    save_plotted_memory(results_cf, results_gd)
-    save_plotted_loss(results_cf, results_gd)
+    results_cf, results_gd = run_comparison(X, y, NUM_PREDICTORS_TO_USE)
+    save_plotted_time(results_cf, results_gd, NUM_PREDICTORS_TO_USE)
+    save_plotted_memory(results_cf, results_gd, NUM_PREDICTORS_TO_USE)
+    save_plotted_loss(results_cf, results_gd, NUM_PREDICTORS_TO_USE)
 
 
 if __name__ == "__main__":

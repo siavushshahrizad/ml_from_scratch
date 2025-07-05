@@ -18,10 +18,10 @@ from tqdm import tqdm
 
 
 NUM_PREDICTORS_TO_USE = [1, 8]
-MAX_PREDICTORS = 500
+MAX_PREDICTORS = 10000
 TRAIN_TEST_RATIO = 0.8
 LEARNING_RATE = 0.0001
-MAX_EPOCHS = 500
+MAX_EPOCHS = 5
 CONVERGENCE_THRESHHOLD = 0.1
 
 
@@ -151,7 +151,7 @@ def run_comparison(X, y, predictors_to_use=[1]):
     results_closed_form = []
     results_gradient_descent = []
     
-    for num in predictors_to_use:
+    for num in tqdm(predictors_to_use, desc="Simulatng feature sizes"):
         X_train =  X[:cutoff, 0:num]
         X_test = X[cutoff:, 0:num]
         y_train = y[:cutoff]
@@ -204,7 +204,7 @@ def save_plotted_memory(results_cf, results_gd, predictors_used=[1]):
     ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
     ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
 
-    ax.set_xticks(x)
+    ax.set_xticks(x, predictors_used)
     ax.set_xlabel('Number of features', fontweight="bold")
     ax.ticklabel_format(style='plain', axis='y')
     ax.set_ylabel('Gigabytes', fontweight="bold")
