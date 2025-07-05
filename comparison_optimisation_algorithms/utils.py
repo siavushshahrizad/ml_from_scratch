@@ -11,15 +11,17 @@ The file contains helper functions.
 import time
 import numpy as np
 import pandas as pd
+import tracemalloc
+import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_california_housing
+from tqdm import tqdm
 
 
-# NUM_PREDICTORS_TO_USE = [1, 8, 50, 100, 200, 500]
 NUM_PREDICTORS_TO_USE = [1, 8]
 MAX_PREDICTORS = 500
 TRAIN_TEST_RATIO = 0.8
 LEARNING_RATE = 0.0001
-MAX_EPOCHS = 5 
+MAX_EPOCHS = 500
 CONVERGENCE_THRESHHOLD = 0.1
 
 
@@ -65,31 +67,39 @@ def closed_form_solution(X, y):
     w_optimal = np.linalg.inv(X.T @ X) @ X.T @ y            # optimal_w results from solving gradient for 0
     return w_optimal
 
-def measure_time_for_weights(func, X, y):
+def measure_time_and_memory(func, X, y):
     """
     Returns time in seconds. Wrapper function
     to see how long each method of calculating
-    weights takes.
+    weights takes. Also returns peak memory usage
+    in GB.
     """
     start = time.time()
+    tracemalloc.start()
+
     weights = func(X, y)
+    _, peak_mem_usage = tracemalloc.get_traced_memory()
+
+    tracemalloc.stop()
     end = time.time()
     time_needed = end - start
-    return time_needed, weights
+    peak_mem_usage = peak_mem_usage / (1024 ** 3)        # Convert from bytes to GB
+
+    return time_needed, peak_mem_usage, weights
 
 def simulate_closed_form_solution(X_train, X_test, y_train, y_test):
     """
     Returns the time needed to compute weights
     and the loss achieved on the test set.
     """
-    time_needed, w = measure_time_for_weights(
+    time_needed, peak_mem_usage, w = measure_time_and_memory(
         closed_form_solution,
         X_train,
         y_train
     )
     y_hat_test = forward_pass(X_test, w)
     test_loss = mean_squared_error(y_test, y_hat_test)
-    return time_needed, test_loss
+    return time_needed, peak_mem_usage, test_loss
 
 def gradient_descent(X, y):
     """
@@ -117,20 +127,23 @@ def gradient_descent(X, y):
     return w 
 
 def simulate_gradient_descent(X_train, X_test, y_train, y_test):
-    time_needed, w = measure_time_for_weights(
+    time_needed, peak_mem_usage, w = measure_time_and_memory(
         gradient_descent, 
         X_train,
         y_train
     )
     y_hat_test = forward_pass(X_test, w)
     test_loss = mean_squared_error(y_test, y_hat_test)
-    return time_needed, test_loss
+    return time_needed, peak_mem_usage, test_loss
         
 def run_comparison(X, y, predictors_to_use=[1]):
     """
     Func takes numpy arrays of features and the targets.
     It then simulates two optimisation methods, returning
     two arrays with the results for each method.
+    The comparison data includes the validation loss and 
+    the time needed to compute optimal/improved weights
+    for number of features specified to be tested.
     """
     # Create simple train test split
     n = X.shape[0]
@@ -159,3 +172,64 @@ def run_comparison(X, y, predictors_to_use=[1]):
         ))
 
     return results_closed_form, results_gradient_descent
+
+# The next three functions are repetitive ...
+def save_plotted_time(results_cf, results_gd, predictors_used=[1]):
+    y_cf = [y_cf[0] for y_cf in results_cf]
+    y_gd = [y_gd[0] for y_gd in results_gd]
+
+    w, x = 0.4, np.arange(len(predictors_used))
+
+    fig, ax = plt.subplots()
+    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
+    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
+
+    ax.set_xticks(x)
+    ax.set_xlabel('Number of features', fontweight="bold")
+    ax.ticklabel_format(style='plain', axis='y')
+    ax.set_ylabel('Time in milliseconds', fontweight="bold")
+    ax.set_title('Fig 1 Time required', fontweight="bold")
+    ax.legend()
+
+    fig.tight_layout()
+    plt.savefig('time.png')
+
+def save_plotted_memory(results_cf, results_gd, predictors_used=[1]):
+    y_cf = [y_cf[1] for y_cf in results_cf]
+    y_gd = [y_gd[1] for y_gd in results_gd]
+
+    w, x = 0.4, np.arange(len(predictors_used))
+
+    fig, ax = plt.subplots()
+    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
+    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
+
+    ax.set_xticks(x)
+    ax.set_xlabel('Number of features', fontweight="bold")
+    ax.ticklabel_format(style='plain', axis='y')
+    ax.set_ylabel('Gigabytes', fontweight="bold")
+    ax.set_title('Fig 2 Memory used ', fontweight="bold")
+    ax.legend()
+
+    fig.tight_layout()
+    plt.savefig('memory.png')
+
+def save_plotted_loss(results_cf, results_gd, predictors_used=[1]):
+    y_cf = [y_cf[2] for y_cf in results_cf]
+    y_gd = [y_gd[2] for y_gd in results_gd]
+
+    w, x = 0.4, np.arange(len(predictors_used))
+
+    fig, ax = plt.subplots()
+    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
+    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
+
+    ax.set_xticks(x)
+    ax.set_xlabel('Number of features', fontweight="bold")
+    ax.ticklabel_format(style='plain', axis='y')
+    ax.set_ylabel('Loss', fontweight="bold")
+    ax.set_title('Fig 3 Test loss', fontweight="bold")
+    ax.legend()
+
+    fig.tight_layout()
+    plt.savefig("loss.png")

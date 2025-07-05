@@ -17,10 +17,11 @@ from utils import (
     forward_pass,
     mean_squared_error,
     closed_form_solution,
-    measure_time_for_weights,
+    measure_time_and_memory,
     simulate_closed_form_solution,
     gradient_descent,
-    simulate_gradient_descent
+    simulate_gradient_descent,
+    run_comparison, 
 )
 
 
@@ -28,6 +29,10 @@ np.random.seed(42)
 
 
 class TestClass:
+    """
+    Class tests each function with a tiny bit 
+    of redundancy.
+    """
     @pytest.fixture
     def generate_random_data(self):
         n = 100
@@ -93,10 +98,16 @@ class TestClass:
             toy_weights = y * 2
             return toy_weights 
 
-        time_needed, toy_weights  = measure_time_for_weights(create_toy_weights, X, y)
+        time_needed, peak_mem_usage, toy_weights  = measure_time_and_memory(
+            create_toy_weights, 
+            X, 
+            y
+        )
 
         assert isinstance(time_needed, float)
         assert time_needed > 0
+        assert isinstance(peak_mem_usage, float)
+        assert peak_mem_usage > 0
         assert isinstance(toy_weights, np.ndarray)
         assert toy_weights.shape[0] == y.shape[0]
 
@@ -104,7 +115,7 @@ class TestClass:
         X_train, y_train, _ = generate_random_data
         X_test, y_test, _ = generate_random_data
 
-        time_needed, loss = simulate_closed_form_solution(
+        time_needed, peak_mem_usage, loss = simulate_closed_form_solution(
             X_train,
             X_test,
             y_train,
@@ -113,6 +124,8 @@ class TestClass:
 
         assert isinstance(time_needed, float)
         assert time_needed > 0
+        assert isinstance(peak_mem_usage, float)
+        assert peak_mem_usage  > 0
         assert isinstance(loss, float)
         assert loss > 0
 
@@ -134,7 +147,7 @@ class TestClass:
         X_train, y_train, _ = generate_random_data
         X_test, y_test, _ = generate_random_data
 
-        time_needed, loss = simulate_gradient_descent(
+        time_needed, peak_mem_usage, loss = simulate_gradient_descent(
             X_train,
             X_test,
             y_train,
@@ -143,6 +156,19 @@ class TestClass:
 
         assert isinstance(time_needed, float)
         assert time_needed > 0
+        assert isinstance(peak_mem_usage, float)
+        assert peak_mem_usage > 0
         assert isinstance(loss, float)
         assert loss > 0
 
+    def test_run_comparison(self, generate_random_data):
+        X, y, _ = generate_random_data
+        number_features = [1, 5, 10]
+        results_cf, results_gd = run_comparison(X, y, number_features)
+
+        assert isinstance(results_cf, list)
+        for i in range(len(results_cf)):
+            assert isinstance(results_cf[i], tuple)
+            assert len(results_cf[i]) == 3      # Each index should have tuple for time, memory, loss
+            assert isinstance(results_gd[i], tuple) 
+            assert len(results_gd[i]) == 3
