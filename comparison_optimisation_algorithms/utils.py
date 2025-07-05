@@ -173,63 +173,50 @@ def run_comparison(X, y, predictors_to_use=[1]):
 
     return results_closed_form, results_gradient_descent
 
-# The next three functions are repetitive ...
-def save_plotted_time(results_cf, results_gd, predictors_used=[1]):
-    y_cf = [y_cf[0] for y_cf in results_cf]
-    y_gd = [y_gd[0] for y_gd in results_gd]
+def save_plotted_data(
+        results_cf, 
+        results_gd, 
+        index,
+        y_label,
+        title,
+        file_name,
+        predictors_used=[1]
+        ):
+    """
+    Saves plots to disk; not very user friendly func.
+    Basically creates grouped bar charts with labels
+    on top of the bars.
+    """
+    y_cf = [y_cf[index] for y_cf in results_cf]
+    y_gd = [y_gd[index] for y_gd in results_gd]
 
     w, x = 0.4, np.arange(len(predictors_used))
 
     fig, ax = plt.subplots()
-    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
-    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
-
-    ax.set_xticks(x)
-    ax.set_xlabel('Number of features', fontweight="bold")
-    ax.ticklabel_format(style='plain', axis='y')
-    ax.set_ylabel('Time in milliseconds', fontweight="bold")
-    ax.set_title('Fig 1 Time required', fontweight="bold")
-    ax.legend()
-
-    fig.tight_layout()
-    plt.savefig('time.png')
-
-def save_plotted_memory(results_cf, results_gd, predictors_used=[1]):
-    y_cf = [y_cf[1] for y_cf in results_cf]
-    y_gd = [y_gd[1] for y_gd in results_gd]
-
-    w, x = 0.4, np.arange(len(predictors_used))
-
-    fig, ax = plt.subplots()
-    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
-    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
+    rects1 = ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
+    rects2 = ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
 
     ax.set_xticks(x, predictors_used)
-    ax.set_xlabel('Number of features', fontweight="bold")
+    ax.set_xlabel("Number of features", fontweight="bold")
     ax.ticklabel_format(style='plain', axis='y')
-    ax.set_ylabel('Gigabytes', fontweight="bold")
-    ax.set_title('Fig 2 Memory used ', fontweight="bold")
+    ax.set_ylabel(y_label, fontweight="bold")
+    ax.set_title(title, fontweight="bold")
     ax.legend()
 
-    fig.tight_layout()
-    plt.savefig('memory.png')
-
-def save_plotted_loss(results_cf, results_gd, predictors_used=[1]):
-    y_cf = [y_cf[2] for y_cf in results_cf]
-    y_gd = [y_gd[2] for y_gd in results_gd]
-
-    w, x = 0.4, np.arange(len(predictors_used))
-
-    fig, ax = plt.subplots()
-    ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
-    ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
-
-    ax.set_xticks(x)
-    ax.set_xlabel('Number of features', fontweight="bold")
-    ax.ticklabel_format(style='plain', axis='y')
-    ax.set_ylabel('Loss', fontweight="bold")
-    ax.set_title('Fig 3 Test loss', fontweight="bold")
-    ax.legend()
+    def autolabel(rects):
+        """
+        Creates the labels on top of the bars.
+        """
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),                          
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+    
+    autolabel(rects1)
+    autolabel(rects2)
 
     fig.tight_layout()
-    plt.savefig("loss.png")
+    plt.savefig(file_name)
