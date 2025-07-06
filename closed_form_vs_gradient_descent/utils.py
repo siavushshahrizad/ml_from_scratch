@@ -17,12 +17,11 @@ from sklearn.datasets import fetch_california_housing
 from tqdm import tqdm
 
 
-NUM_PREDICTORS_TO_USE = [1, 8]
-MAX_PREDICTORS = 10000
 TRAIN_TEST_RATIO = 0.8
-LEARNING_RATE = 0.0001
-MAX_EPOCHS = 5
-CONVERGENCE_THRESHHOLD = 0.1
+MAX_EPOCHS = 10 
+BASE_LEARNING_RATE = 0.001
+# MAX_PREDICTORS = 10000
+MAX_PREDICTORS = 5000
 
 
 def add_bias(X):
@@ -37,7 +36,6 @@ def load_and_clean_data():
     Loads data which is pre-cleaned.
     The first col is the median income variable.
     More can be found out with data.DESCR.
-    Also adds synthetic features for simulations.
     The data is returned as two numpy arrays.
     """
     data = fetch_california_housing()
@@ -46,7 +44,7 @@ def load_and_clean_data():
     # Add synthetic features
     additions = np.random.randn(X.shape[0], MAX_PREDICTORS - X.shape[1])
     X = np.concatenate((X, additions), axis=1)
-    
+
     X = add_bias(X)
     y = data.target
     return X, y
@@ -56,7 +54,23 @@ def forward_pass(X, w):
 
 def mean_squared_error(y, y_hat):
     m = y.shape[0]
-    return 0.5 * (np.sum(np.square(y - y_hat)) / m)
+    # residual = y - y_hat
+    # squared_residual = np.square(residual)
+    # summed_error = np.sum(squared_residual)
+    # return 0.5 * summed_error / m
+    residual = y - y_hat
+    scale = np.max(np.abs(residual))
+    
+    if scale > 1e4:  # Prevent overflow
+        scaled_residual = residual / scale
+        squared_residual = np.square(scaled_residual)
+        summed_error = np.sum(squared_residual)
+        return 0.5 * summed_error / m
+    else:
+        residual = y - y_hat
+        squared_residual = np.square(residual)
+        summed_error = np.sum(squared_residual)
+        return 0.5 * summed_error / m
 
 def closed_form_solution(X, y):
     """
@@ -78,12 +92,12 @@ def measure_time_and_memory(func, X, y):
     tracemalloc.start()
 
     weights = func(X, y)
-    _, peak_mem_usage = tracemalloc.get_traced_memory()
+    _, peak_mem_usage = tracemalloc.get_traced_memory()     # Returns in bytes
 
     tracemalloc.stop()
     end = time.time()
-    time_needed = end - start
-    peak_mem_usage = peak_mem_usage / (1024 ** 3)        # Convert from bytes to GB
+    time_needed = end - start               # Returns in seconds
+    peak_mem_usage = peak_mem_usage / (1024 ** 3)   # Conversion to GB
 
     return time_needed, peak_mem_usage, weights
 
@@ -108,21 +122,22 @@ def gradient_descent(X, y):
     does a certain number of max loops but 
     generally to aims when there is 
     "convergence".
+
+    NOTE: If the below implementation
+    was slightly different so that a 
+    matrix was multiplied with a matrix,
+    then gradient descent would be a much
+    worse algorithm.
     """
-    w = np.random.randn(X.shape[1])     
+    w = np.zeros(X.shape[1])     
     n = X.shape[0]
-    y_hat_prev = forward_pass(X, w)
-    loss_prev = mean_squared_error(y, y_hat_prev)
 
-    for _ in range(MAX_EPOCHS):
-        y_hat_curr = forward_pass(X, w)
+    for i in range(MAX_EPOCHS):
+        y_hat_curr = forward_pass(X, w)         # Prevents matrix multiplication        
         gradient =  (X.T @ (y_hat_curr  - y)) / n
-        w -= (LEARNING_RATE * gradient)
-        loss_curr = mean_squared_error(y, y_hat_curr)
 
-        if abs(loss_curr - loss_prev) <= CONVERGENCE_THRESHHOLD:
-            break
-        loss_prev = loss_curr
+        learning_rate = BASE_LEARNING_RATE / X.shape[1] # Experimented to see if helps with overflow; not on its own
+        w -= (learning_rate * gradient)
 
     return w 
 
@@ -151,7 +166,7 @@ def run_comparison(X, y, predictors_to_use=[1]):
     results_closed_form = []
     results_gradient_descent = []
     
-    for num in tqdm(predictors_to_use, desc="Simulatng feature sizes"):
+    for num in tqdm(predictors_to_use, desc="Simulating feature sizes"):
         X_train =  X[:cutoff, 0:num]
         X_test = X[cutoff:, 0:num]
         y_train = y[:cutoff]
@@ -174,49 +189,41 @@ def run_comparison(X, y, predictors_to_use=[1]):
     return results_closed_form, results_gradient_descent
 
 def save_plotted_data(
-        results_cf, 
-        results_gd, 
+        data, 
         index,
         y_label,
         title,
         file_name,
         predictors_used=[1]
-        ):
+    ):
     """
-    Saves plots to disk; not very user friendly func.
-    Basically creates grouped bar charts with labels
-    on top of the bars.
+    Saves bar charts to disk. The data coming in
+    is an array of (time_needed, memory_peak_use,
+    loss). The index argument therefore specifies
+    which three of these variables should be printed.
+    The function is somewhat inefficient, but better
+    is the enemy of good.
     """
-    y_cf = [y_cf[index] for y_cf in results_cf]
-    y_gd = [y_gd[index] for y_gd in results_gd]
-
-    w, x = 0.4, np.arange(len(predictors_used))
-
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - w/2, y_cf, width=w, label='Closed-form')
-    rects2 = ax.bar(x + w/2, y_gd, width=w, label='Gradient descent')
-
-    ax.set_xticks(x, predictors_used)
-    ax.set_xlabel("Number of features", fontweight="bold")
-    ax.ticklabel_format(style='plain', axis='y')
-    ax.set_ylabel(y_label, fontweight="bold")
-    ax.set_title(title, fontweight="bold")
-    ax.legend()
-
-    def autolabel(rects):
+    def add_labels(x_data, y_data):
         """
-        Creates the labels on top of the bars.
+        Adds labels; assumes only natural numbers.
         """
-        for rect in rects:
-            height = rect.get_height()
-            ax.annotate('{}'.format(height),
-                        xy=(rect.get_x() + rect.get_width() / 2, height),
-                        xytext=(0, 3),                          
-                        textcoords="offset points",
-                        ha='center', va='bottom')
-    
-    autolabel(rects1)
-    autolabel(rects2)
+        offset = max(y_data) / 100
 
-    fig.tight_layout()
+        for i in range(len(x_data)):
+            rounded_num = round(y_data[i], 2)
+            plt.text(i, y_data[i] + offset, rounded_num, ha="center")
+
+    y_data = [y[index] for y in data]
+    x_data = range(len(predictors_used))
+
+    plt.bar(x_data, y_data)
+    plt.xticks(x_data, predictors_used)
+    plt.title(title)
+    plt.xlabel("Number of features")
+    plt.ylabel(y_label)
+
+    add_labels(x_data, y_data)
+
     plt.savefig(file_name)
+    plt.close()
