@@ -20,8 +20,7 @@ from tqdm import tqdm
 TRAIN_TEST_RATIO = 0.8
 MAX_EPOCHS = 100
 BASE_LEARNING_RATE = 0.01
-# MAX_PREDICTORS = 10000
-MAX_PREDICTORS = 5000
+MAX_PREDICTORS = 25000
 
 
 def add_bias(X):
@@ -138,11 +137,10 @@ def gradient_descent(X, y):
     w = np.zeros(X.shape[1])     
     n = X.shape[0]
 
-    for i in range(MAX_EPOCHS):
+    for i in range(MAX_EPOCHS):     # Left for debugging
         y_hat_curr = forward_pass(X, w)         # Prevents matrix multiplication        
         gradient =  (X.T @ (y_hat_curr  - y)) / n
 
-        # learning_rate = BASE_LEARNING_RATE / X.shape[1] # Experimented to see if helps with overflow; not on its own
         w -= (BASE_LEARNING_RATE * gradient)
     
     return w 

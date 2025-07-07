@@ -101,7 +101,7 @@ class TestClass:
     def test_measure_time_for_weights(self, generate_random_data):
         X, y, _ = generate_random_data
 
-        def create_toy_weights(X, y):
+        def create_toy_weights(X, y):   # X not used as makes calc harder
             toy_weights = y * 2
             return toy_weights 
 
@@ -176,6 +176,6 @@ class TestClass:
         assert isinstance(results_cf, list)
         for i in range(len(results_cf)):
             assert isinstance(results_cf[i], tuple)
-            assert len(results_cf[i]) == 3      # Each index should have tuple for time, memory, loss
+            assert len(results_cf[i]) == 3      # Each index should have a tuple for time, memory, loss
             assert isinstance(results_gd[i], tuple) 
             assert len(results_gd[i]) == 3
