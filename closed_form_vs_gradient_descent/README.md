@@ -33,13 +33,13 @@ A rule of thumb is that the closed-form algorithm can be comfortably used with m
 3. **Believe the smoking gun**. I think a lot of engineering success is about psychology. For example, we want our algorithms to work, so there is confirmation bias. I noticed initially that my algorithm seemed to work in many places, but there was some weird behaviour elsewhere, e.g. gradient descent losses exploded after one epoch but massively dropped in the second epoch (hint: overflow and discrepant measurement scales of variables). I had to force myself to look into those, because it was so seductive to take the chips that were already on the table.
 
 # Repository structure
+```
 ├── requirements.txt        # Libraries for installation 
-
 ├── comparison.py           # Main experiment runner
-
 ├── utils.py                # Algorithm implementations
 ├── linear_regression.pdf   # Mathematical derivations
 ├── test_funcs.py           # Unit tests
 ├── imgs/                   # Generated plots
 └── README.md
+```
 
