@@ -8,7 +8,6 @@ The file compares the two optimisation methods.
 This is the main file to run.
 """
 
-import numpy as np
 from utils import (
     load_and_clean_data,
     run_comparison,

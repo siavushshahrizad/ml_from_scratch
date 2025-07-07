@@ -1,30 +1,26 @@
 # Introduction
-This project is about what doesn't work. Originally, I had set out to compare different optimisation algorithms, by implementing them from scratch and focusing on the linear regression problem. In the end, I compared these two:
+I compared two different optimisation algorithms for linear regression. 
 - **Closed-form solution**: An algorithm that provides us instantly with the best-possible weights
-- **Gradient descent**: An algorithm that adjust weights iteratively to improve them
+- **Gradient descent**: An algorithm that improves weights iteratively
 
-Gradient descent is the dominant optimisation algorithm used in practice, and the staple of libraries such as HuggingFace's transformers library. The closed-form algorithm is an alternative, which textbooks tell us doesn't scale well and isn't available for non-linear problems such as logistic regression and neural networks. I have added technical detail on these issues, such as derivation of gradients, [here](./linear_regression.pdf). One point, for example, is that the closed-form algorithm requires O(D**2) space with D being the number of features, whereas gradient descent only needs O(D), meaning the latter scales better. Although modern GPUs should be be able to handle such space requirements up to a point.
+I was interested in how they performed against each other and when one might be more feasible then the other.
 
-One reason we would want to use closed-form is because it gives us for sure the best weights, whereas theoretically we could stop gradient descent too soon and end up with less-than-optimal weights. Although I originally wanted to show when the closed-form solution breaks down and why we would have to use gradient descent in practice, I found it hard to show this.
+# Background
+Gradient descent is the dominant optimisation algorithm in practice. The closed-form algorithm is an alternative, which textbooks tell us doesn't scale well and isn't available for non-linear problems such as logistic regression and neural networks. I have added technical details on these issues, such as derivation of gradients, [here](./linear_regression.pdf). One point, for example, is that the closed-form algorithm requires O(D**2) space with D being the number of features, whereas gradient descent only needs O(D), meaning the latter scales better. One reason we would want to use closed-form is because it gives us for sure the best weights, whereas theoretically we could stop gradient descent too soon and end up with less-than-optimal weights.
 
-# Instructions
-If you want to run any of the code, you need to create a venv and install requirements.
-
-# Methods
+# Data
 I used the California Housing dataset,  which contains about 20k samples to predict house prices based on 8 variables such as median income. More details can be found [here](https://scikit-learn.org/stable/datasets/real_world.html#california-housing-dataset).
 
 # Lessons
-1. **Data availability**. It was hard to find the data I needed, and I spent a significant time searching and swapping datasets mid-stream. At some point tried to create randomly-initiated, synthetic features, for the California Housing dataset, but this impacted how much realistically gradient descent could learn, and I abandoned the approach. I really needed data with high numbers of features to show break-down, and if I had spent more time I could have probably found a dataset with many gene expression or a dataset in the language domain. In the end, my data was not right for the task, and this created many downstream problems.
-
-2. **Silent failure**. Initially, when I still had synthetic data, I simulated matrix calculations with tens of thousands of features. On a first look, it appeared that the data was telling the story I wanted it to. But there were too many smoking guns; a lot of things looked weird. For example, the simulations never broke down even when I incr
-
-2. **Measurement tools**. I measured the time and memory requirements of both algorithms with the time and tracemalloc library. I didn't spend enough time to fully understan
+1. Gradient descent generally achieves better validation losses, though with maybe 500-1000 epochs of weight updates, Gradient descent might get there. I just did a flat implementation where there were 100 epochs for all simulated scenarios.
 
 
-1. **Theory-data gap**: 1. **Data Availability**: Despite widespread ML adoption, finding datasets 
-   that naturally demonstrate algorithmic limits proved surprisingly difficult.
-2. **Implementation vs Theory**: NumPy's optimized implementations obscure 
-   the theoretical O(n³) complexity through clever optimizations.
-3. **Measurement Precision**: With small datasets, timing and memory 
-   measurements are dominated by overhead and noise.
+# Meta-lessons
+1. **Data is hard**. The closed-form algorithm is supposed to break down, for example, when there are too many features in the dataset, but finding such a dataset is hard. Datasets aren't that well annotated often, and many contain few features. So I worked with suboptimal data, and augmented it with randomly initiated, synthetic features. A better dataset would probably be one in the language domain or genetic data. Finding semi-suitable data was a much longer time-sink than I thought.
+2. **Formulas  oversimplify**. Textbooks will tell you what the formula for the forward pass might be, and you feel clever when you implement it. What makes you feel dumb, on the other hand is, when your losses look weird and you spend hours and hours looking it weights and their updates. I learned that one solution to my problems was data normalisation. Textbooks rarely tell you that correct implementation of a formula does not equal a functioning algorithm. A successful ML programme requires a lot more debugging, archaeology, and a paranoia to check your work than I thought. I guess my expectations got a weight update!
+3. **Believe the smoking gun**. I think a lot of engineering success is about psychology. We want our algorithms to work, so there is confirmation bias. I noticed initially that my algorithm seemed to work in many places, and I had to force myself to look into those because it was just so seductive to take the chips that were already on the table. But my losses seemed weird, there was an explosion of the loss when their was one epoch of learning bu then essentially massive learning followed by immediate stagnation in the second epoch. This was due to several reasons such as overflow and the variety of scales on which the Housing data was measured on.
+
+
+
+
 

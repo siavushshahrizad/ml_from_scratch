@@ -18,8 +18,8 @@ from tqdm import tqdm
 
 
 TRAIN_TEST_RATIO = 0.8
-MAX_EPOCHS = 10 
-BASE_LEARNING_RATE = 0.001
+MAX_EPOCHS = 100
+BASE_LEARNING_RATE = 0.01
 # MAX_PREDICTORS = 10000
 MAX_PREDICTORS = 5000
 
@@ -31,6 +31,13 @@ def add_bias(X):
     bias_terms = np.ones(X.shape[0])
     return  np.column_stack([bias_terms, X])
 
+def normalise_data(X):
+    col_means = np.mean(X, axis=0)
+    col_stds = np.std(X, axis=0)
+
+    normalised = (X - col_means) / col_stds
+    return normalised
+
 def load_and_clean_data():
     """
     Loads data which is pre-cleaned.
@@ -40,6 +47,7 @@ def load_and_clean_data():
     """
     data = fetch_california_housing()
     X = pd.DataFrame(data.data, columns=data.feature_names).to_numpy()
+    X = normalise_data(X)
 
     # Add synthetic features
     additions = np.random.randn(X.shape[0], MAX_PREDICTORS - X.shape[1])
@@ -53,19 +61,19 @@ def forward_pass(X, w):
     return X @ w
 
 def mean_squared_error(y, y_hat):
+    """
+    Overflow easily occurs so my quick fix
+    is to check for large numbers and scale.
+    """
     m = y.shape[0]
-    # residual = y - y_hat
-    # squared_residual = np.square(residual)
-    # summed_error = np.sum(squared_residual)
-    # return 0.5 * summed_error / m
     residual = y - y_hat
     scale = np.max(np.abs(residual))
     
-    if scale > 1e4:  # Prevent overflow
+    if scale > 1e4:  
         scaled_residual = residual / scale
         squared_residual = np.square(scaled_residual)
         summed_error = np.sum(squared_residual)
-        return 0.5 * summed_error / m
+        return 0.5 * summed_error / m * (scale ** 2)
     else:
         residual = y - y_hat
         squared_residual = np.square(residual)
@@ -119,9 +127,7 @@ def gradient_descent(X, y):
     """
     Calculates updates to weights
     via gradient descent. Implementation
-    does a certain number of max loops but 
-    generally to aims when there is 
-    "convergence".
+    does a certain number of max to keep it simple.
 
     NOTE: If the below implementation
     was slightly different so that a 
@@ -136,9 +142,9 @@ def gradient_descent(X, y):
         y_hat_curr = forward_pass(X, w)         # Prevents matrix multiplication        
         gradient =  (X.T @ (y_hat_curr  - y)) / n
 
-        learning_rate = BASE_LEARNING_RATE / X.shape[1] # Experimented to see if helps with overflow; not on its own
-        w -= (learning_rate * gradient)
-
+        # learning_rate = BASE_LEARNING_RATE / X.shape[1] # Experimented to see if helps with overflow; not on its own
+        w -= (BASE_LEARNING_RATE * gradient)
+    
     return w 
 
 def simulate_gradient_descent(X_train, X_test, y_train, y_test):
@@ -167,8 +173,8 @@ def run_comparison(X, y, predictors_to_use=[1]):
     results_gradient_descent = []
     
     for num in tqdm(predictors_to_use, desc="Simulating feature sizes"):
-        X_train =  X[:cutoff, 0:num]
-        X_test = X[cutoff:, 0:num]
+        X_train =  X[:cutoff, 0:num+1]      # +1 accounts for added bias
+        X_test = X[cutoff:, 0:num+1]
         y_train = y[:cutoff]
         y_test = y[cutoff:]
         

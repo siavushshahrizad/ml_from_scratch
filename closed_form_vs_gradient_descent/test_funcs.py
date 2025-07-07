@@ -14,6 +14,7 @@ from utils import (
     MAX_PREDICTORS,
     add_bias,
     load_and_clean_data,
+    normalise_data,
     forward_pass,
     mean_squared_error,
     closed_form_solution,
@@ -58,6 +59,12 @@ class TestClass:
         expected = np.array([[1, 1,  2, 3], [1, 4, 5, 6]])
         assert X_prime.shape[1] == X.shape[1] + 1
         assert np.array_equal(X_prime, expected)
+
+    def test_normalise_data(self, generate_static_data):
+        x, _ = generate_static_data
+        normalised = normalise_data(x)
+        expected = np.array([[-1, -1, -1], [1, 1, 1]]) 
+        assert np.array_equal(normalised, expected)
 
     def test_load_and_clean_data(self):
         X, y = load_and_clean_data()
