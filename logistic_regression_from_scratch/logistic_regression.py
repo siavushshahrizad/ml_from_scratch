@@ -9,7 +9,7 @@ the logistic regression on the breast
 cancer data.
 """
 
-
+import random
 from utils import (
     FILE,
     load_and_clean_data
@@ -18,6 +18,9 @@ from utils import (
 
 def main():
     X, y = load_and_clean_data(FILE)
+    d = [0, 1]
+    print(X)
+
 
 if __name__ == "__main__":
     main()

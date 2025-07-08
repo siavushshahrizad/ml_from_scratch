@@ -32,3 +32,27 @@ def load_and_clean_data(file):
     y = data[:, -1:]
     return X, y
 
+def create_data_split(X, y, ratio):
+    """
+    Returns a split of two datasets when one is inputted.     
+    The split is random and the point of the func is to split
+    datasets into train, test, validation.
+    """
+    n = len(X)
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    cutoff = int(n * ratio)
+    indices_set1 = indices[:cutoff]
+    indices_set2 = indices[cutoff:]
+
+    X_1 = X[indices_set1]
+    X_2 = X[indices_set2]
+    y_1 = y[indices_set1]
+    y_2 = y[indices_set2]
+
+    return X_1, X_2, y_1, y_2
+
+
+    
+
+
