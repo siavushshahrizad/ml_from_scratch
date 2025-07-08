@@ -52,7 +52,10 @@ def create_data_split(X, y, ratio):
 
     return X_1, X_2, y_1, y_2
 
-
+def forward_pass(X, w):
+    z = X @ w
+    y_hat = 1 / (1 + np.exp(-z))
+    return y_hat
     
 
 

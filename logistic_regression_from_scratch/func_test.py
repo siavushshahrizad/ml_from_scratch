@@ -14,7 +14,8 @@ import numpy as np
 from utils import (
     FILE,
     load_and_clean_data,
-    create_data_split
+    create_data_split,
+    forward_pass
 )
 
 
@@ -37,8 +38,15 @@ class TestClass:
             [3, 2],
             [1, 4]
         ])
+        
+        w = np.array([1, 2])
         y = np.array([1, 1, 1, 0, 0, 1, 0, 1, 1, 0])
-        return X, y
+
+
+        X_tiny = np.array([[1, 2], [3, 4]])
+        y_tiny = np.array([0, 1])
+
+        return X, y, X_tiny, y_tiny, w
 
     def test_load_and_clean_data(self):
         X, y = load_and_clean_data(FILE)
@@ -52,9 +60,9 @@ class TestClass:
         assert set(np.unique(y)) == {2, 4}                                 # Should only be
 
     def test_create_data_split(self, create_static_data):
-        X, y = create_static_data
+        X, y, _, _, _ = create_static_data
 
-        # Simulate a first split into two halves        
+        # Simulate first split into two halves        
         ratio = 0.5
         X_1, X_2, y_1, y_2 = create_data_split(X, y, ratio)
         expected_rows = X.shape[0] * ratio
@@ -79,7 +87,12 @@ class TestClass:
         assert len(y_2) == expected_rows_X_2
         assert len(y_3) == expected_rows_X_3
         
+    def test_forward_pass(self, create_static_data):
+        _, _, X, _, w = create_static_data
+        y_hat = forward_pass(X, w)
+        expected = np.array([0.993, 1])
 
+        assert np.array_equal(np.round(y_hat, 3), expected)
 
 
 
