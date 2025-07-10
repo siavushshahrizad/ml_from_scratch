@@ -16,7 +16,7 @@ from utils import (
     load_and_clean_data,
     create_data_split,
     forward_pass,
-    logistic_cross_entropy
+    mean_logistic_cross_entropy
 )
 
 
@@ -98,11 +98,11 @@ class TestClass:
         assert np.array_equal(np.round(y_hat, 3), expected_y_hat)
 
 
-    def test_logistic_cross_entropy(self, create_static_data):
+    def test_mean_logistic_cross_entropy(self, create_static_data):
         _, _, X, y, w = create_static_data
         _, logits = forward_pass(X, w)
-        loss = logistic_cross_entropy(logits, y, w)
-        expected = 5.756732
+        loss = mean_logistic_cross_entropy(logits, y, w)
+        expected = 2.878366
 
         assert isinstance(loss, float) 
         assert round(loss, 6) == expected

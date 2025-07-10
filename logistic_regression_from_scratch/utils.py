@@ -61,30 +61,16 @@ def forward_pass(X, w):
     y_hat = 1 / (1 + np.exp(-z))
     return y_hat, z
 
-def logistic_cross_entropy(logits, y, w, l=0.25):
+def mean_logistic_cross_entropy(logits, y, w, l=0.25):
     """
     L1 regularisation is applied to this loss func.
     The way this is implemented, e.g. logits are consumed
     rather than y_hat and then logaddexp, is supposed to 
     be more stable according to Grosse's notes.
     """
-    print("logits: ", logits)
-    part1 = np.logaddexp(0, -logits)
-    part2 = y.T @ np.logaddexp(0, -logits)
-    part3 = np.logaddexp(0, logits)
-    part4 = (1 - y).T @ np.logaddexp(0, logits)
     loss = y.T @ np.logaddexp(0, -logits) + (1 - y).T @ np.logaddexp(0, logits)
-    print("part1: ", part1)
-    print("part2: ", part2)
-    print("part3: ", part3)
-    print("part4: ", part4)
-
-    loss = y.T @ np.logaddexp(0, -logits) + (1 - y).T @ np.logaddexp(0, logits)
-    print("L: ", loss)
-    loss_with_l1 = loss +  l * np.sum(np.abs(w))
-    print("w: ", w)
-    print("L: ", loss_with_l1)
-    return loss_with_l1
+    mean_loss_with_l1 = (loss +  l * np.sum(np.abs(w))) / y.shape[0]    
+    return mean_loss_with_l1
 
 
     
