@@ -15,7 +15,8 @@ from utils import (
     FILE,
     load_and_clean_data,
     create_data_split,
-    forward_pass
+    forward_pass,
+    logistic_cross_entropy
 )
 
 
@@ -89,11 +90,22 @@ class TestClass:
         
     def test_forward_pass(self, create_static_data):
         _, _, X, _, w = create_static_data
-        y_hat = forward_pass(X, w)
-        expected = np.array([0.993, 1])
+        y_hat, logits = forward_pass(X, w)
+        expected_logits = np.array([5, 11])
+        expected_y_hat = np.array([0.993, 1])
 
-        assert np.array_equal(np.round(y_hat, 3), expected)
+        assert np.array_equal(logits, expected_logits)
+        assert np.array_equal(np.round(y_hat, 3), expected_y_hat)
 
+
+    def test_logistic_cross_entropy(self, create_static_data):
+        _, _, X, y, w = create_static_data
+        _, logits = forward_pass(X, w)
+        loss = logistic_cross_entropy(logits, y, w)
+        expected = 5.756732
+
+        assert isinstance(loss, float) 
+        assert round(loss, 6) == expected
 
 
         
