@@ -16,6 +16,11 @@ import pandas as pd
 FILE = "./data/breast-cancer-wisconsin.data"
 MISSING_VALUE = "?"
 
+def normalise_data(X):
+    mean = np.mean(X, axis=0)       # Technically inefficient as mean recomputed in std
+    std = np.std(X, axis=0)
+    return (X - mean) / std
+
 
 def load_and_clean_data(file):
     """
@@ -61,7 +66,7 @@ def forward_pass(X, w):
     y_hat = 1 / (1 + np.exp(-z))
     return y_hat, z
 
-def mean_logistic_cross_entropy(logits, y, w, l=0.25):
+def mean_logistic_cross_entropy(logits, y, w, l=0.01):
     """
     L1 regularisation is applied to this loss func.
     The way this is implemented, e.g. logits are consumed
@@ -71,6 +76,35 @@ def mean_logistic_cross_entropy(logits, y, w, l=0.25):
     loss = y.T @ np.logaddexp(0, -logits) + (1 - y).T @ np.logaddexp(0, logits)
     mean_loss_with_l1 = (loss +  l * np.sum(np.abs(w))) / y.shape[0]    
     return mean_loss_with_l1
+
+def simple_gradient_descent(
+        w, 
+        X, 
+        y, 
+        num_epochs=50, 
+        l=0.01,
+        alpha=0.01 
+        ):
+    """
+    This is a sanity check function to see if the
+    most basic version of gradient descent is working.
+    """
+    trained_w = np.copy(w)
+    for _ in range(num_epochs):
+        y_hat, _ = forward_pass(X, trained_w)
+        gradient = (X.T @ (y_hat - y)) / len(y)
+        l1_gradient = l * (w / np.abs(w))       # Should cause problems if div by 0; np.sign func needed?
+        final_gradient = gradient + l1_gradient
+        trained_w -= alpha * final_gradient
+    
+    return trained_w
+
+
+
+        
+
+
+
 
 
     

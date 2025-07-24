@@ -10,6 +10,7 @@ cancer data.
 """
 
 
+import numpy as np
 from utils import (
     FILE,
     load_and_clean_data,
@@ -22,9 +23,14 @@ VAL_TO_TEST_SET_RATIO = 0.5
 
 
 def main():
+    # Get data and split it
     X, y = load_and_clean_data(FILE)
     X_train, X_other, y_train, y_other = create_data_split(X, y, TRAIN_TO_OTHER_SET_RATIO)
     X_val, X_test, y_val, y_test = create_data_split(X_other, y_other, VAL_TO_TEST_SET_RATIO)
+
+    # Initialise weights and train on data
+    w = np.random.randn(X.shape[1])
+
 
 
 if __name__ == "__main__":

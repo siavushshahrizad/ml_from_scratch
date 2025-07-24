@@ -12,11 +12,13 @@ for functions.
 import pytest
 import numpy as np
 from utils import (
+    normalise_data,
     FILE,
     load_and_clean_data,
     create_data_split,
     forward_pass,
-    mean_logistic_cross_entropy
+    mean_logistic_cross_entropy,
+    simple_gradient_descent
 )
 
 
@@ -40,7 +42,7 @@ class TestClass:
             [1, 4]
         ])
         
-        w = np.array([1, 2])
+        w = np.array([1, 2], dtype=float)
         y = np.array([1, 1, 1, 0, 0, 1, 0, 1, 1, 0])
 
 
@@ -48,6 +50,18 @@ class TestClass:
         y_tiny = np.array([0, 1])
 
         return X, y, X_tiny, y_tiny, w
+
+    @pytest.fixture 
+    def create_realistic_data(self):
+        pass
+
+    def test_normalise_data(self, create_static_data):
+        _, _, X, _, _ = create_static_data
+        result = normalise_data(X)
+        expected = np.array([[-1, -1], [1, 1]])
+
+        assert np.array_equal(result, expected)
+
 
     def test_load_and_clean_data(self):
         X, y = load_and_clean_data(FILE)
@@ -102,10 +116,43 @@ class TestClass:
         _, _, X, y, w = create_static_data
         _, logits = forward_pass(X, w)
         loss = mean_logistic_cross_entropy(logits, y, w)
-        expected = 2.878366
+        expected = 2.518366
 
         assert isinstance(loss, float) 
         assert round(loss, 6) == expected
 
+    def test_simple_gradient_descent(self, create_static_data):
+        """
+        Func tests whether loss goes down over several
+        batches of epochs, and whether weights are moving.
+        """
+        X, y, _, _, w = create_static_data
+        _, logits = forward_pass(X, w)
+        initial_loss = mean_logistic_cross_entropy(logits, y, w)
 
-        
+        # Comparison after one wave of gradient descent
+        trained_w_1 = simple_gradient_descent(
+            w,
+            X,
+            y,
+            num_epochs=5
+        )
+        _, logits = forward_pass(X, trained_w_1)
+        trained_loss_1 = mean_logistic_cross_entropy(logits, y, trained_w_1)
+        assert trained_loss_1 < initial_loss
+        assert not np.allclose(w, trained_w_1)
+
+        # # Comparison after another  wave of gradient descent
+        trained_w_2 = simple_gradient_descent(
+            trained_w_1,
+            X,
+            y,
+            num_epochs=5
+        )
+        _, logits = forward_pass(X, trained_w_2)
+        trained_loss_2 = mean_logistic_cross_entropy(logits, y, trained_w_2)
+        assert trained_loss_2 < trained_loss_1
+        assert not np.allclose(trained_w_2, trained_w_1)
+
+
+
