@@ -93,20 +93,61 @@ def simple_gradient_descent(
     for _ in range(num_epochs):
         y_hat, _ = forward_pass(X, trained_w)
         gradient = (X.T @ (y_hat - y)) / len(y)
-        l1_gradient = l * (w / np.abs(w))       # Should cause problems if div by 0; np.sign func needed?
+        l1_gradient = l * (trained_w / np.abs(trained_w))       # Should cause problems if div by 0; np.sign func needed?
         final_gradient = gradient + l1_gradient
         trained_w -= alpha * final_gradient
     
     return trained_w
 
-
-
-        
-
-
-
-
-
+def early_stopping_gradient_descent(
+        w, 
+        X_train, 
+        y_train,
+        X_val,
+        y_val,
+        min_epochs=5,
+        l=0.01,
+        threshold=1.0,
+        alpha=0.01
+        ):
+    """
+    Func applies and early_stopping variant of 
+    gradient descent to prevent overfitting based on
+    criterion parameter which is by default 5. This 
+    means that the algorithm stops gradients descent if 
+    the current validation loss is 5% higher or more
+    than the best validation loss. Note that training
+    runs for a minimum amount of time.
+    """
+    trained_w = np.copy(w)
+    checkpoint_w = np.copy(w)
+    optimum_loss = float("inf")
+    epochs = 0
     
+    # Gradient descent loop
+    while True:
+        epochs += 1 
+        # Training via gradient descent
+        y_hat, _ = forward_pass(X_train, trained_w)
+        gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
+        l1_gradient = l * (trained_w / np.abs(trained_w))
+        final_gradient = gradient + l1_gradient
+        trained_w -= alpha * final_gradient
+        
+        # Potential early stopping
+        _, z_val = forward_pass(X_val, trained_w)
+        validation_loss = mean_logistic_cross_entropy(
+            z_val, 
+            y_val, 
+            trained_w
+        )
+        generalisation_loss = (validation_loss / optimum_loss - 1) * 100
+        stopping_criterion = generalisation_loss > threshold
 
+        if stopping_criterion and epochs >= min_epochs:
+            break
+        if validation_loss < optimum_loss: 
+            optimum_loss = validation_loss
+            checkpoint_w = np.copy(trained_w)
 
+    return checkpoint_w, epochs

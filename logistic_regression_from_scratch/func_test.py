@@ -18,7 +18,8 @@ from utils import (
     create_data_split,
     forward_pass,
     mean_logistic_cross_entropy,
-    simple_gradient_descent
+    simple_gradient_descent,
+    early_stopping_gradient_descent,
 )
 
 
@@ -120,7 +121,7 @@ class TestClass:
 
         assert isinstance(loss, float) 
         assert round(loss, 6) == expected
-
+    
     def test_simple_gradient_descent(self, create_static_data):
         """
         Func tests whether loss goes down over several
@@ -153,6 +154,48 @@ class TestClass:
         trained_loss_2 = mean_logistic_cross_entropy(logits, y, trained_w_2)
         assert trained_loss_2 < trained_loss_1
         assert not np.allclose(trained_w_2, trained_w_1)
+
+    def test_early_stopping_gd(self, create_static_data):
+        """
+        A bit repetitive compared to previous func but 
+        faff to unify. Func tests that validation loss 
+        is decreasing and that this optimiser runs
+        for a certain min num of epochs and that it
+        doesn't run too much. It also smell-tests
+        if it runs for fewer epochs if stopping
+        criterion is harsher.
+        """
+        X_train, y_train, X_val, y_val, w = create_static_data
+        _, logits = forward_pass(X_val, w)
+        initial_loss = mean_logistic_cross_entropy(logits, y_val, w)
+
+        trained_w_1, relaxed_epochs = early_stopping_gradient_descent(
+            w,
+            X_train,
+            y_train,
+            X_val,
+            y_val,
+        )
+        _, logits = forward_pass(X_val, trained_w_1)
+        trained_loss_1 = mean_logistic_cross_entropy(logits, y_val, trained_w_1)
+        assert trained_loss_1 < initial_loss
+        assert not np.allclose(w, trained_w_1)
+        assert relaxed_epochs > 5       # Min num of epochs
+        assert relaxed_epochs < 1000    # Would be red flag if run that long for simple data
+        
+        # Harsher stropping criterion test
+        _, stricter_epochs = early_stopping_gradient_descent(
+            w, 
+            X_train,
+            y_train,
+            X_val, 
+            y_val,
+            threshold=0.5
+        )
+        assert stricter_epochs < relaxed_epochs
+
+
+        
 
 
 
