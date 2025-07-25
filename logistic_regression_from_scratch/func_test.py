@@ -9,7 +9,7 @@ for functions.
 """
 
 
-import pytest
+import pytest       # Used for setting traces in pytest
 import numpy as np
 from utils import (
     normalise_data,
@@ -20,6 +20,7 @@ from utils import (
     mean_logistic_cross_entropy,
     simple_gradient_descent,
     early_stopping_gradient_descent,
+    adam
 )
 
 
@@ -43,20 +44,14 @@ class TestClass:
             [1, 4]
         ])
         
-        w = np.array([1, 2], dtype=float)
-        w.reshape(-1, 1)
-        y = np.array([1, 1, 1, 0, 0, 1, 0, 1, 1, 0])
-        y.reshape(-1, 1)
+        w = np.array([1, 2], dtype=float).reshape(-1, 1)
+        y = np.array([1, 1, 1, 0, 0, 1, 0, 1, 1, 0]).reshape(-1, 1)
 
         X_tiny = np.array([[1, 2], [3, 4]])
         y_tiny = np.array([0, 1])
         y_tiny.reshape(-1, 1)
 
         return X, y, X_tiny, y_tiny, w
-
-    @pytest.fixture 
-    def create_realistic_data(self):
-        pass
 
     def test_normalise_data(self, create_static_data):
         _, _, X, _, _ = create_static_data
@@ -108,12 +103,10 @@ class TestClass:
     def test_forward_pass(self, create_static_data):
         _, _, X, _, w = create_static_data
         y_hat, logits = forward_pass(X, w)
-        expected_logits = np.array([5, 11])
-        expected_y_hat = np.array([0.993, 1])
-
+        expected_logits = np.array([5, 11]).reshape(-1, 1)
+        expected_y_hat = np.array([0.993, 1]).reshape(-1, 1)
         assert np.array_equal(logits, expected_logits)
         assert np.array_equal(np.round(y_hat, 3), expected_y_hat)
-
 
     def test_mean_logistic_cross_entropy(self, create_static_data):
         _, _, X, y, w = create_static_data
@@ -126,22 +119,17 @@ class TestClass:
 
         assert isinstance(loss, float) 
         assert round(loss, 6) == expected
-    
-    def test_simple_gradient_descent(self, create_static_data):
-        """
-        Func tests whether loss goes down over several
-        batches of epochs, and whether weights are moving.
-        """
-        X, y, _, _, w = create_static_data
+
+    def _helper_fixed_gd(self, gradient_func, w, X, y, **kwargs):
         _, logits = forward_pass(X, w)
         initial_loss = mean_logistic_cross_entropy(logits, y, w)
 
         # Comparison after one wave of gradient descent
-        trained_w_1 = simple_gradient_descent(
+        trained_w_1 = gradient_func(
             w,
             X,
             y,
-            num_epochs=5
+            **kwargs
         )
         _, logits = forward_pass(X, trained_w_1)
         trained_loss_1 = mean_logistic_cross_entropy(logits, y, trained_w_1)
@@ -149,17 +137,31 @@ class TestClass:
         assert not np.allclose(w, trained_w_1)
 
         # # Comparison after another  wave of gradient descent
-        trained_w_2 = simple_gradient_descent(
+        trained_w_2 = gradient_func(
             trained_w_1,
             X,
             y,
-            num_epochs=5
+            **kwargs
         )
         _, logits = forward_pass(X, trained_w_2)
         trained_loss_2 = mean_logistic_cross_entropy(logits, y, trained_w_2)
         assert trained_loss_2 < trained_loss_1
         assert not np.allclose(trained_w_2, trained_w_1)
-
+    
+    def test_simple_gradient_descent(self, create_static_data):
+        """
+        Func tests whether loss goes down over several
+        batches of epochs, and whether weights are moving.
+        """
+        X, y, _, _, w = create_static_data
+        self._helper_fixed_gd(
+            simple_gradient_descent, 
+            w, 
+            X, 
+            y, 
+            num_epochs=5
+        )
+        
     def test_early_stopping_gd(self, create_static_data):
         """
         A bit repetitive compared to previous func but 
@@ -199,8 +201,16 @@ class TestClass:
         )
         assert stricter_epochs < relaxed_epochs
 
-
-        
-
-
-
+    def test_adam(self, create_static_data):
+        """
+        Func tests whether loss goes down over several
+        batches of epochs, and whether weights are moving.
+        """
+        X, y, _, _, w = create_static_data
+        self._helper_fixed_gd(
+            adam, 
+            w, 
+            X, 
+            y, 
+            time_step=5
+        )

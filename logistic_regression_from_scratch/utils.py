@@ -11,6 +11,7 @@ main programme uses.
 
 import numpy as np
 import pandas as pd
+import pytest
 
 
 FILE = "./data/breast-cancer-wisconsin.data"
@@ -64,7 +65,7 @@ def forward_pass(X, w):
     """
     z = X @ w
     y_hat = 1 / (1 + np.exp(-z))
-    y_hat.reshape(-1, 1)        # Or letter shape mismatch in gradient descent
+    y_hat = y_hat.reshape(-1, 1)        # Or letter shape mismatch in gradient descent
     return y_hat, z
 
 def mean_logistic_cross_entropy(logits, y, w, l=0.01):
@@ -152,3 +153,41 @@ def early_stopping_gradient_descent(
             checkpoint_w = np.copy(trained_w)
 
     return checkpoint_w, epochs
+
+def adam(
+        w,
+        X,
+        y,
+        decay1=0.9,
+        decay2=0.999,
+        eps=1e-8,
+        time_step=50,
+        alpha=0.01,
+        l=0.01
+        ):
+    """
+    This func implements the Adam optimiser (simple version)
+    from the Klingma and Lei Ba (2015) paper. For what 
+    the exact params are, check their paper:     
+    https://arxiv.org/abs/1412.6980
+    """
+    trained_w = np.copy(w)
+    mavg1 = np.zeros(w.shape[0]).reshape(-1, 1)
+    mavg2 = np.zeros(w.shape[0]).reshape(-1, 1)
+
+    for step in range(1, time_step + 1):
+        y_hat, _ = forward_pass(X, trained_w)
+        gradient = (X.T @ (y_hat - y)) / len(y)
+        l1_gradient = l * (trained_w / np.abs(trained_w))       # Sample problem as in simple GD func
+        final_gradient = gradient + l1_gradient
+        mavg1 = decay1 * mavg1 + (1 - decay1) * final_gradient
+        mavg2 = decay2 * mavg2 + (1 - decay2) * np.square(final_gradient)
+        mavg1_cor = mavg1 / (1 - decay1 ** step)
+        mavg2_cor = mavg2 / (1 - decay2 ** step)
+        trained_w -= alpha  * mavg1_cor / (np.sqrt(mavg2_cor) + eps)
+
+    return trained_w
+
+
+    
+

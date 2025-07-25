@@ -19,7 +19,8 @@ from utils import (
     forward_pass,
     mean_logistic_cross_entropy,
     simple_gradient_descent,
-    early_stopping_gradient_descent
+    early_stopping_gradient_descent,
+    adam
 )
 
 
@@ -42,12 +43,14 @@ def main():
     _, z = forward_pass(X_train, w)
     initial_loss = mean_logistic_cross_entropy(z, y_train, w)
     print("Initial loss: ", initial_loss)
+    
+    # GD
     w_trained = simple_gradient_descent(w, X_train, y_train)
-
     _, z = forward_pass(X_train, w_trained)
     trained_loss = mean_logistic_cross_entropy(z, y_train, w_trained)
     print("Trained loss: ", trained_loss)
     
+    # Early stopping GD
     w_trained, epochs_trained = early_stopping_gradient_descent(
         w, 
         X_train, 
@@ -59,13 +62,18 @@ def main():
     trained_loss = mean_logistic_cross_entropy(z, y_train, w_trained)
     print("Trained loss early stopping: ", trained_loss)
     print("Epochs trained: ", epochs_trained)
+    
+    # Adam
+    w_trained = adam(
+        w, 
+        X_train, 
+        y_train,
+        )
+    _, z = forward_pass(X_train, w_trained)
+    trained_loss = mean_logistic_cross_entropy(z, y_train, w_trained)
+    print("Trained loss adam: ", trained_loss)
 
-
-
-
-
-
-
+    # Adam with early stopping
 
 
 if __name__ == "__main__":
