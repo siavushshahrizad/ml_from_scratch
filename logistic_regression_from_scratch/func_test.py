@@ -44,11 +44,13 @@ class TestClass:
         ])
         
         w = np.array([1, 2], dtype=float)
+        w.reshape(-1, 1)
         y = np.array([1, 1, 1, 0, 0, 1, 0, 1, 1, 0])
-
+        y.reshape(-1, 1)
 
         X_tiny = np.array([[1, 2], [3, 4]])
         y_tiny = np.array([0, 1])
+        y_tiny.reshape(-1, 1)
 
         return X, y, X_tiny, y_tiny, w
 
@@ -117,6 +119,9 @@ class TestClass:
         _, _, X, y, w = create_static_data
         _, logits = forward_pass(X, w)
         loss = mean_logistic_cross_entropy(logits, y, w)
+        print(w.shape)
+        print(y.shape)
+        print(type(loss))
         expected = 2.518366
 
         assert isinstance(loss, float) 

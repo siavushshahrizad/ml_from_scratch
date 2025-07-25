@@ -64,6 +64,7 @@ def forward_pass(X, w):
     """
     z = X @ w
     y_hat = 1 / (1 + np.exp(-z))
+    y_hat.reshape(-1, 1)        # Or letter shape mismatch in gradient descent
     return y_hat, z
 
 def mean_logistic_cross_entropy(logits, y, w, l=0.01):
@@ -75,7 +76,7 @@ def mean_logistic_cross_entropy(logits, y, w, l=0.01):
     """
     loss = y.T @ np.logaddexp(0, -logits) + (1 - y).T @ np.logaddexp(0, logits)
     mean_loss_with_l1 = (loss +  l * np.sum(np.abs(w))) / y.shape[0]    
-    return mean_loss_with_l1
+    return mean_loss_with_l1.item()     # So scalar is actually returned
 
 def simple_gradient_descent(
         w, 
