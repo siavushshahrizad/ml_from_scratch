@@ -161,7 +161,7 @@ def adam(
         decay1=0.9,
         decay2=0.999,
         eps=1e-8,
-        time_step=50,
+        time_steps=50,
         alpha=0.01,
         l=0.01
         ):
@@ -175,7 +175,7 @@ def adam(
     mavg1 = np.zeros(w.shape[0]).reshape(-1, 1)
     mavg2 = np.zeros(w.shape[0]).reshape(-1, 1)
 
-    for step in range(1, time_step + 1):
+    for step in range(1, time_steps + 1):
         y_hat, _ = forward_pass(X, trained_w)
         gradient = (X.T @ (y_hat - y)) / len(y)
         l1_gradient = l * (trained_w / np.abs(trained_w))       # Sample problem as in simple GD func
@@ -188,6 +188,61 @@ def adam(
 
     return trained_w
 
+def early_stopping_adam(
+    w,
+    X_train,
+    y_train,
+    X_val,
+    y_val,
+    decay1=0.9,
+    decay2=0.999,
+    eps=1e-8,
+    min_steps=50,
+    alpha=0.01,
+    l=0.01,
+    threshold=1.0,
+    ):
+    """
+    Func combines early stopping with Adam.
+    See previous funcs above for more detail.
+    """
+    trained_w = np.copy(w)
+    checkpoint_w = np.copy(w)
+    optimum_loss = float("inf")
+    steps = 0
 
+    mavg1 = np.zeros(w.shape[0]).reshape(-1, 1)
+    mavg2 = np.zeros(w.shape[0]).reshape(-1, 1)
     
+    # Adam loop
+    while True:
+        steps += 1 
+        # Training         
+        y_hat, _ = forward_pass(X_train, trained_w)
+        gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
+        l1_gradient = l * (trained_w / np.abs(trained_w))
+        final_gradient = gradient + l1_gradient
 
+        mavg1 = decay1 * mavg1 + (1 - decay1) * final_gradient
+        mavg2 = decay2 * mavg2 + (1 - decay2) * np.square(final_gradient)
+        mavg1_cor = mavg1 / (1 - decay1 ** steps)
+        mavg2_cor = mavg2 / (1 - decay2 ** steps)
+        trained_w -= alpha  * mavg1_cor / (np.sqrt(mavg2_cor) + eps)
+        
+        # Potential early stopping
+        _, z_val = forward_pass(X_val, trained_w)
+        validation_loss = mean_logistic_cross_entropy(
+            z_val, 
+            y_val, 
+            trained_w
+        )
+        generalisation_loss = (validation_loss / optimum_loss - 1) * 100
+        stopping_criterion = generalisation_loss > threshold
+
+        if stopping_criterion and steps >= min_steps:
+            break
+        if validation_loss < optimum_loss: 
+            optimum_loss = validation_loss
+            checkpoint_w = np.copy(trained_w)
+
+    return checkpoint_w, steps
