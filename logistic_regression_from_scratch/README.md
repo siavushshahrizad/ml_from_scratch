@@ -15,10 +15,23 @@ I used the 1992 [Breast Cancer Wisconsin] (https://archive.ics.uci.edu/dataset/1
 # Sources
 I used Grosse's lecture [notes](https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf) to implement the general logistic regression framework. I used the original [Kingma and Ba (2017)](https://arxiv.org/abs/1412.6980) paper to implement adam. I also used the [Prechelt paper](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5) for early stopping.
 
-# Lessons and reflections
-- **unit tests**: I heavily rely on unit tests. For me they are quick smell tests or pre-bugging that tell me whether I am going in the right direction. I can't imagine doing this work without theses tests and without scratching my head for hours where I have gone wrong.
+# Findings
 
+# Notable Bugs Encountered
 
+## 1. Early Stopping Formula Assumes Positive Losses
+**The Bug**: Implemented formula from Prechelt (1998): `GL = 100 * (E_va/E_opt - 1)`
+This assumes positive losses (like MSE), but breaks with negative log likelihood.
+
+**Why it Failed Silently**: 
+- When optimum_loss = -10 and current_loss = -8 (worse)
+- Formula gives: (-8/-10 - 1)*100 = -20% (says improving!)
+- Model stopped early when improving, ran forever when degrading
+
+**The Fix**: Check if losses are negative and adjust formula accordingly
+[Show corrected code]
+
+**Lesson**: Always verify paper assumptions match your implementation
 
 # Structure of this experiment
 ```

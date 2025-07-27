@@ -12,7 +12,7 @@ main programme uses.
 import numpy as np
 import pandas as pd
 import pytest
-
+import inspect
 
 FILE = "./data/breast-cancer-wisconsin.data"
 MISSING_VALUE = "?"
@@ -107,9 +107,8 @@ def early_stopping_gradient_descent(
         y_train,
         X_val,
         y_val,
-        min_epochs=5,
+        patience=5,
         l=0.01,
-        threshold=1.0,
         alpha=0.01
         ):
     """
@@ -124,11 +123,13 @@ def early_stopping_gradient_descent(
     trained_w = np.copy(w)
     checkpoint_w = np.copy(w)
     optimum_loss = float("inf")
-    epochs = 0
+    epochs_trained = 0
+    epochs_worse = 0
     
     # Gradient descent loop
-    while True:
-        epochs += 1 
+    while epochs_worse < patience:
+        epochs_trained += 1
+
         # Training via gradient descent
         y_hat, _ = forward_pass(X_train, trained_w)
         gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
@@ -143,16 +144,15 @@ def early_stopping_gradient_descent(
             y_val, 
             trained_w
         )
-        generalisation_loss = (validation_loss / optimum_loss - 1) * 100
-        stopping_criterion = generalisation_loss > threshold
 
-        if stopping_criterion and epochs >= min_epochs:
-            break
-        if validation_loss < optimum_loss: 
+        if validation_loss > optimum_loss:
+            epochs_worse += 1
+        else:
+            epochs_worse = 0
             optimum_loss = validation_loss
             checkpoint_w = np.copy(trained_w)
 
-    return checkpoint_w, epochs
+    return checkpoint_w, epochs_trained
 
 def adam(
         w,
@@ -197,10 +197,9 @@ def early_stopping_adam(
     decay1=0.9,
     decay2=0.999,
     eps=1e-8,
-    min_steps=50,
+    patience=5,
     alpha=0.01,
     l=0.01,
-    threshold=1.0,
     ):
     """
     Func combines early stopping with Adam.
@@ -209,14 +208,16 @@ def early_stopping_adam(
     trained_w = np.copy(w)
     checkpoint_w = np.copy(w)
     optimum_loss = float("inf")
+    epochs_worse = 0
     steps = 0
 
     mavg1 = np.zeros(w.shape[0]).reshape(-1, 1)
     mavg2 = np.zeros(w.shape[0]).reshape(-1, 1)
     
     # Adam loop
-    while True:
+    while epochs_worse < patience:
         steps += 1 
+
         # Training         
         y_hat, _ = forward_pass(X_train, trained_w)
         gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
@@ -236,12 +237,11 @@ def early_stopping_adam(
             y_val, 
             trained_w
         )
-        generalisation_loss = (validation_loss / optimum_loss - 1) * 100
-        stopping_criterion = generalisation_loss > threshold
 
-        if stopping_criterion and steps >= min_steps:
-            break
-        if validation_loss < optimum_loss: 
+        if validation_loss > optimum_loss:
+            epochs_worse += 1
+        else:
+            epochs_worse = 0
             optimum_loss = validation_loss
             checkpoint_w = np.copy(trained_w)
 
