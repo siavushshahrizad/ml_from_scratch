@@ -22,7 +22,10 @@ from utils import (
     simple_gradient_descent,
     early_stopping_gradient_descent,
     adam,
-    early_stopping_adam
+    early_stopping_adam,
+    assign_class_labels,
+    calculate_precision,
+    calculate_accuracy
 )
 
 
@@ -54,6 +57,12 @@ class TestClass:
         y_tiny.reshape(-1, 1)
 
         return X, y, X_tiny, y_tiny, w
+
+    @pytest.fixture
+    def create_classification_data(self):
+        sigmoids = np.array([0.5, 0.2, 0.8, 0.4, 0.5])
+        y = np.array([1, 0, 1, 1, 0])      # This set up should lead to the last one misclassified
+        return sigmoids, y
 
     def test_normalise_data(self, create_static_data):
         _, _, X, _, _ = create_static_data
@@ -119,9 +128,6 @@ class TestClass:
         _, _, X, y, w = create_static_data
         _, logits = forward_pass(X, w)
         loss = mean_logistic_cross_entropy(logits, y, w)
-        print(w.shape)
-        print(y.shape)
-        print(type(loss))
         expected = 2.518366
 
         assert isinstance(loss, float) 
@@ -251,3 +257,37 @@ class TestClass:
         X_val,
         y_val,
         )
+
+    def test_assign_class_lables(self, create_classification_data):
+        y_hat, _ = create_classification_data
+        expected = np.array([1, 0, 1, 0, 1])       # Second to last is correct misclassification         
+        y_hat = assign_class_labels(y_hat)
+        np.array_equal(expected, y_hat)
+
+    def test_calculate_precision(self, create_classification_data):
+        # Test when there is one  fp and one missed tp
+        y_hat, y = create_classification_data
+        pred = assign_class_labels(y_hat)
+        expected = 2 / 3            # Meaning perfect score
+        result = calculate_precision(pred, y)
+        assert expected == result
+
+        # Test when no false fp
+        pred[-1] = 0
+        expected = 1
+        result = calculate_precision(pred, y)
+        assert expected == result
+
+    def test_calculate_accuracy(self, create_classification_data):
+        # Test when on fp and fn
+        y_hat, y = create_classification_data
+        pred = assign_class_labels(y_hat)
+        expected = 3 / 5
+        result = calculate_accuracy(pred, y)
+        assert expected == result
+
+        # Test when two fn and one fp
+        pred[1] = 1
+        expected = 2 / 5
+        result = calculate_accuracy(pred, y)
+        assert expected == result

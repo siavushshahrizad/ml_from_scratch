@@ -22,7 +22,10 @@ from utils import (
     simple_gradient_descent,
     early_stopping_gradient_descent,
     adam,
-    early_stopping_adam
+    early_stopping_adam,
+    assign_class_labels,
+    calculate_precision,
+    calculate_accuracy
 )
 
 
@@ -47,8 +50,8 @@ def main():
     ### Arrays to save trial runs ###
     #                               #
     #################################
-    loss_random = np.zeros(NUM_TRIALS)
-    loss_gd = np.zeros(NUM_TRIALS)
+    loss_random = np.zeros(NUM_TRIALS)               
+    loss_gd = np.zeros(NUM_TRIALS)                   
     loss_adam = np.zeros(NUM_TRIALS)
     loss_early_gd = np.zeros(NUM_TRIALS)
     loss_early_adam = np.zeros(NUM_TRIALS)
@@ -56,6 +59,17 @@ def main():
     epochs_early_gd = np.zeros(NUM_TRIALS)
     epochs_early_adam = np.zeros(NUM_TRIALS)
 
+    precision_random = np.zeros(NUM_TRIALS)               
+    precision_gd = np.zeros(NUM_TRIALS)                   
+    precision_adam = np.zeros(NUM_TRIALS)
+    precision_early_gd = np.zeros(NUM_TRIALS)
+    precision_early_adam = np.zeros(NUM_TRIALS)
+
+    acc_random = np.zeros(NUM_TRIALS)               
+    acc_gd = np.zeros(NUM_TRIALS)                   
+    acc_adam = np.zeros(NUM_TRIALS)
+    acc_early_gd = np.zeros(NUM_TRIALS)
+    acc_early_adam = np.zeros(NUM_TRIALS)
 
     ### Get data, process, and split it ###
     #                                     #
@@ -73,22 +87,21 @@ def main():
         
         # Initialise weights and train on data
         w = np.random.randn(X.shape[1], 1)      # Important to initialise with right shape
-        # print("Initialised weights: ", w)
         
         # Random weights
-        _, z = forward_pass(X_test, w)
+        y_hat, z = forward_pass(X_test, w)
         loss_random[i] = mean_logistic_cross_entropy(z, y_test, w)
-        
+        labels = assign_class_labels(y_hat)
+        precision_random[i] = calculate_precision(labels, y_test)
+        acc_random[i] = calculate_accuracy(labels, y_test)
+
         # GD
-        # w_trained = simple_gradient_descent(w, X_train, y_train, num_epochs=200)
-        # _, z = forward_pass(X_test, w_trained)
-        # loss_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
-        # print("z: ", z)
-        # print("y: ", y)
-        # accuracy = np.mean((z > 0) == y_test)
-        # print("Acc: ", accuracy)
-        # misclassifications = np.sum((z > 0) != y_test)
-        # print("Miss: ", misclassifications)
+        w_trained = simple_gradient_descent(w, X_train, y_train, num_epochs=1000)
+        y_hat, z = forward_pass(X_test, w_trained)
+        loss_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        labels = assign_class_labels(y_hat)
+        precision_gd[i] = calculate_precision(labels, y_test)
+        acc_gd[i] = calculate_accuracy(labels, y_test)
         
         # Early stopping GD
         # w_trained, epochs_trained = early_stopping_gradient_descent(
@@ -103,13 +116,17 @@ def main():
         # loss_early_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
         
         # Adam
-        # w_trained = adam(
-        #     w, 
-        #     X_train, 
-        #     y_train,
-        #     )
-        # _, z = forward_pass(X_test, w_trained)
-        # loss_adam[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        w_trained = adam(
+            w, 
+            X_train, 
+            y_train,
+            time_steps=1000
+            )
+        y_hat, z = forward_pass(X_test, w_trained)
+        loss_adam[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        labels = assign_class_labels(y_hat)
+        precision_adam[i] = calculate_precision(labels, y_test)
+        acc_adam[i] = calculate_accuracy(labels, y_test)
 
         # Adam with early stopping
         # w_trained, epochs_trained = early_stopping_adam(
@@ -131,8 +148,16 @@ def main():
     print("Loss adam: ", loss_adam.mean())
     print("Loss early gd: ", loss_early_gd.mean())    
     print("Loss early adam: ", loss_early_adam.mean())    
-    print("Epocchs early GD: ", epochs_early_gd.mean())     
+    print("Epcchs early GD: ", epochs_early_gd.mean())     
     print("Epochs adam: ", epochs_early_adam.mean()) 
-   
+
+    print("Precision random: ", precision_random.mean())
+    print("Precision gd: ", precision_gd.mean())
+    print("Precision adam: ", precision_adam.mean())
+
+    print("Acc random: ", acc_random.mean())
+    print("Acc gd: ", acc_gd.mean())
+    print("Acc adam: ", acc_adam.mean())
+
 if __name__ == "__main__":
     main()

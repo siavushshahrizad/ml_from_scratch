@@ -94,25 +94,19 @@ def simple_gradient_descent(
         y, 
         num_epochs=50, 
         l=0.01,
-        alpha=0.01 
+        alpha=0.1 
         ):
     """
     This is a sanity check function to see if the
     most basic version of gradient descent is working.
     """
     trained_w = np.copy(w)
-    for i in range(num_epochs):
-        y_hat, logits = forward_pass(X, trained_w)      # Remove logits later
+    for _ in range(num_epochs):
+        y_hat, _ = forward_pass(X, trained_w)              
         gradient = (X.T @ (y_hat - y)) / len(y)
         l1_gradient = l * (trained_w / np.abs(trained_w))       # Should cause problems if div by 0; np.sign func needed?
         final_gradient = gradient + l1_gradient
         trained_w -= alpha * final_gradient
-
-        # if i % 1000 == 0:
-        #     print("Epoch: ", i)
-        #     print("Avg weights: ", trained_w.mean())
-        #     loss = mean_logistic_cross_entropy(logits, y, trained_w)
-        #     print("Train loss: ", loss)
 
     return trained_w
 
@@ -123,8 +117,8 @@ def early_stopping_gradient_descent(
         X_val,
         y_val,
         patience=5,
-        l=0.01,
-        alpha=0.01
+        l=0.1,
+        alpha=0.1
         ):
     """
     Func applies and early_stopping variant of 
@@ -144,14 +138,11 @@ def early_stopping_gradient_descent(
     # Gradient descent loop
     while epochs_worse < patience:
         epochs_trained += 1
-        # print(epochs_trained)
-        # if epochs_trained == 10:
-        #     break
 
         # Training via gradient descent
         y_hat, _ = forward_pass(X_train, trained_w)
         gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
-        l1_gradient = l * (trained_w / np.abs(trained_w))
+        l1_gradient = l * np.sign(trained_w)
         final_gradient = gradient + l1_gradient
         trained_w -= alpha * final_gradient
         
@@ -162,8 +153,7 @@ def early_stopping_gradient_descent(
             y_val, 
             trained_w
         )
-        # print("Val: ", validation_loss)
-        # print("Best: ", optimum_loss)
+
         if validation_loss > optimum_loss:
             epochs_worse += 1
         else:
@@ -240,7 +230,7 @@ def early_stopping_adam(
         # Training         
         y_hat, _ = forward_pass(X_train, trained_w)
         gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
-        l1_gradient = l * (trained_w / np.abs(trained_w))
+        l1_gradient = l * np.sign(trained_w)
         final_gradient = gradient + l1_gradient
 
         mavg1 = decay1 * mavg1 + (1 - decay1) * final_gradient
@@ -265,3 +255,40 @@ def early_stopping_adam(
             checkpoint_w = np.copy(trained_w)
 
     return checkpoint_w, steps
+
+def assign_class_labels(y_hat, threshold=0.5):
+    """
+    Func takes output from sigmoid
+    and assigns class labels. The default 
+    threshold is P(X = 1) if x >= 0.5.
+    """
+    return (y_hat >= threshold).astype(int)
+
+def calculate_precision(pred, y): 
+    """
+    Note the limitations of precision:
+    it really only measures how many false 
+    positives you have, not how many you
+    failed to classify as positive when
+    you should have. I got formula
+    for precision and recall form Wikipedia:
+    https://tinyurl.com/5b7mud97.
+
+    There is no error handling here. There could
+    also be a div by 0 error.
+    """
+    return np.sum(pred * y) / np.sum(pred)
+
+def calculate_accuracy(pred, y):
+    """
+    See notes in previous func for a 
+    link. Link will show calculation.
+
+    Whilst precision is  a measure of 
+    how often you have false positives,
+    accuracy measures how often you 
+    misclassify (fp + fn).
+    """
+    num = np.sum(pred == y)
+    denum = len(pred)
+    return num / denum
