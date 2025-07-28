@@ -13,6 +13,7 @@ import pytest       # Used for setting traces in pytest
 import numpy as np
 from utils import (
     normalise_data,
+    process_y_labels,
     FILE,
     load_and_clean_data,
     create_data_split,
@@ -61,6 +62,11 @@ class TestClass:
 
         assert np.array_equal(result, expected)
 
+    def test_process_y_lables(self):
+        y = np.array([2, 2, 4, 4, 2])
+        expected = np.array([0, 0, 1, 1, 0])
+        conversion = process_y_labels(y)
+        assert np.array_equal(conversion, expected)
 
     def test_load_and_clean_data(self):
         X, y = load_and_clean_data(FILE)
@@ -235,13 +241,13 @@ class TestClass:
             time_steps=5
         )
 
-    # def test_early_stopping_adam(self, create_static_data):
-    #     X_train, y_train, X_val, y_val, w = create_static_data
-    #     self._helper_early_stopping_gd(
-    #     early_stopping_adam,
-    #     w,
-    #     X_train, 
-    #     y_train,
-    #     X_val,
-    #     y_val,
-        # )
+    def test_early_stopping_adam(self, create_static_data):
+        X_train, y_train, X_val, y_val, w = create_static_data
+        self._helper_early_stopping_gd(
+        early_stopping_adam,
+        w,
+        X_train, 
+        y_train,
+        X_val,
+        y_val,
+        )

@@ -11,8 +11,7 @@ main programme uses.
 
 import numpy as np
 import pandas as pd
-import pytest
-import inspect
+
 
 FILE = "./data/breast-cancer-wisconsin.data"
 MISSING_VALUE = "?"
@@ -22,6 +21,16 @@ def normalise_data(X):
     std = np.std(X, axis=0)
     return (X - mean) / std
 
+def process_y_labels(y):
+    """
+    The data set uses 2 for benign and 4 for 
+    malignant cases. This causes a bunch of 
+    errors if not changed.
+
+    After processing 0 means benign and 1
+    malignant.
+    """
+    return (y == 4).astype(int)
 
 def load_and_clean_data(file):
     """
@@ -92,13 +101,19 @@ def simple_gradient_descent(
     most basic version of gradient descent is working.
     """
     trained_w = np.copy(w)
-    for _ in range(num_epochs):
-        y_hat, _ = forward_pass(X, trained_w)
+    for i in range(num_epochs):
+        y_hat, logits = forward_pass(X, trained_w)      # Remove logits later
         gradient = (X.T @ (y_hat - y)) / len(y)
         l1_gradient = l * (trained_w / np.abs(trained_w))       # Should cause problems if div by 0; np.sign func needed?
         final_gradient = gradient + l1_gradient
         trained_w -= alpha * final_gradient
-    
+
+        # if i % 1000 == 0:
+        #     print("Epoch: ", i)
+        #     print("Avg weights: ", trained_w.mean())
+        #     loss = mean_logistic_cross_entropy(logits, y, trained_w)
+        #     print("Train loss: ", loss)
+
     return trained_w
 
 def early_stopping_gradient_descent(
@@ -129,6 +144,9 @@ def early_stopping_gradient_descent(
     # Gradient descent loop
     while epochs_worse < patience:
         epochs_trained += 1
+        # print(epochs_trained)
+        # if epochs_trained == 10:
+        #     break
 
         # Training via gradient descent
         y_hat, _ = forward_pass(X_train, trained_w)
@@ -144,7 +162,8 @@ def early_stopping_gradient_descent(
             y_val, 
             trained_w
         )
-
+        # print("Val: ", validation_loss)
+        # print("Best: ", optimum_loss)
         if validation_loss > optimum_loss:
             epochs_worse += 1
         else:
