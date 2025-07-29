@@ -103,19 +103,14 @@ def simple_gradient_descent(
     most basic version of gradient descent is working.
     """
     trained_w = np.copy(w)
-    # print("Going in: ", trained_w)
 
     for _ in range(num_epochs):
         y_hat, _ = forward_pass(X, trained_w)              
         gradient = (X.T @ (y_hat - y)) / len(y)
-        # print("Normal gradient: ", gradient)
         l1_gradient = l * (trained_w / np.abs(trained_w))       # Should cause problems if div by 0; np.sign func needed?
         final_gradient = gradient + l1_gradient
-        # print("Final normal: ", final_gradient) 
         trained_w -= alpha * final_gradient
-        # print("Runs once")
 
-    # print("w leaving: ", trained_w)
     return trained_w
 
 def early_stopping_gradient_descent(
@@ -143,20 +138,15 @@ def early_stopping_gradient_descent(
     epochs_trained = 0
     epochs_worse = 0
     
-    # print("Going in for early: ", checkpoint_w)
     # Gradient descent loop
     while epochs_worse < patience:
         epochs_trained += 1
-        # print("Also runs once")
 
         # Training via gradient descent
         y_hat, _ = forward_pass(X_train, trained_w)
         gradient = (X_train.T @ (y_hat - y_train)) / len(y_train)
-        # print("Early gradient: ", gradient)
-        # l1_gradient = l * np.sign(trained_w)
         l1_gradient = l * (trained_w / np.abs(trained_w))       # Should cause problems if div by 0; np.sign func needed?
         final_gradient = gradient + l1_gradient
-        # print("Final: ", final_gradient) 
         trained_w -= alpha * final_gradient
         
         # Potential early stopping
@@ -167,23 +157,13 @@ def early_stopping_gradient_descent(
             trained_w
         )
     
-        # print("Epoch: ", epochs_trained)
-        # print("Condition: ", (validation_loss + TOLERANCE) > optimum_loss)
-        # print("Worse: ", epochs_worse)
-        # print("Val loss: ", validation_loss + TOLERANCE)
-        # print("Best loss: ", optimum_loss)
-
-        if validation_loss + TOLERANCE > optimum_loss:
+        if validation_loss + TOLERANCE > optimum_loss:  # Loss as heuristic; probs acc/precision would be better
             epochs_worse += 1
         else:
             epochs_worse = 0
             optimum_loss = validation_loss
             checkpoint_w = np.copy(trained_w)
 
-        # if epochs_trained == 1:
-            # break
-
-    # print("Coming out for early: ", checkpoint_w)
     return checkpoint_w, epochs_trained
 
 def adam(
@@ -271,7 +251,7 @@ def early_stopping_adam(
             trained_w
         )
 
-        if validation_loss + TOLERANCE > optimum_loss:
+        if validation_loss + TOLERANCE > optimum_loss:  # Loss as heuristic; probs acc/precision would be better
             epochs_worse += 1
         else:
             epochs_worse = 0
