@@ -31,7 +31,7 @@ from utils import (
 
 TRAIN_TO_OTHER_SET_RATIO = 0.8
 VAL_TO_TEST_SET_RATIO = 0.5
-NUM_TRIALS = 1
+NUM_TRIALS = 5 
 
 
 np.random.seed(42)      # Set for reproducability
@@ -96,7 +96,7 @@ def main():
         acc_random[i] = calculate_accuracy(labels, y_test)
 
         # GD
-        w_trained = simple_gradient_descent(w, X_train, y_train, num_epochs=1000)
+        w_trained = simple_gradient_descent(w, X_train, y_train)
         y_hat, z = forward_pass(X_test, w_trained)
         loss_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
         labels = assign_class_labels(y_hat)
@@ -104,23 +104,25 @@ def main():
         acc_gd[i] = calculate_accuracy(labels, y_test)
         
         # Early stopping GD
-        # w_trained, epochs_trained = early_stopping_gradient_descent(
-        #     w, 
-        #     X_train, 
-        #     y_train,
-        #     X_val,
-        #     y_val
-        #     )
-        # epochs_early_gd[i] = epochs_trained
-        # _, z = forward_pass(X_test, w_trained)
-        # loss_early_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        w_trained, epochs_trained = early_stopping_gradient_descent(
+            w, 
+            X_train, 
+            y_train,
+            X_val,
+            y_val
+            )
+        epochs_early_gd[i] = epochs_trained
+        y_hat, z = forward_pass(X_test, w_trained)
+        loss_early_gd[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        labels = assign_class_labels(y_hat)
+        precision_early_gd[i] = calculate_precision(labels, y_test)
+        acc_early_gd[i] = calculate_accuracy(labels, y_test)
         
         # Adam
         w_trained = adam(
             w, 
             X_train, 
             y_train,
-            time_steps=1000
             )
         y_hat, z = forward_pass(X_test, w_trained)
         loss_adam[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
@@ -129,16 +131,19 @@ def main():
         acc_adam[i] = calculate_accuracy(labels, y_test)
 
         # Adam with early stopping
-        # w_trained, epochs_trained = early_stopping_adam(
-        #     w, 
-        #     X_train, 
-        #     y_train,
-        #     X_val,
-        #     y_val
-        #     )
-        # epochs_early_adam[i] = epochs_trained
-        # _, z = forward_pass(X_test, w_trained)
-        # loss_early_adam[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        w_trained, epochs_trained = early_stopping_adam(
+            w, 
+            X_train, 
+            y_train,
+            X_val,
+            y_val
+            )
+        epochs_early_adam[i] = epochs_trained
+        y_hat, z = forward_pass(X_test, w_trained)
+        loss_early_adam[i] = mean_logistic_cross_entropy(z, y_test, w_trained)
+        labels = assign_class_labels(y_hat)
+        precision_early_adam[i] = calculate_precision(labels, y_test)
+        acc_early_adam[i] = calculate_accuracy(labels, y_test)
 
     ###     Print results to disk     ###
     #                                   #
@@ -148,16 +153,21 @@ def main():
     print("Loss adam: ", loss_adam.mean())
     print("Loss early gd: ", loss_early_gd.mean())    
     print("Loss early adam: ", loss_early_adam.mean())    
-    print("Epcchs early GD: ", epochs_early_gd.mean())     
+    print()
+    print("Epochs early GD: ", epochs_early_gd.mean())     
     print("Epochs adam: ", epochs_early_adam.mean()) 
-
+    print()
     print("Precision random: ", precision_random.mean())
     print("Precision gd: ", precision_gd.mean())
     print("Precision adam: ", precision_adam.mean())
-
+    print("Precision early gd: ", precision_early_gd.mean())
+    print("Precision early adam: ", precision_early_adam.mean())
+    print()
     print("Acc random: ", acc_random.mean())
     print("Acc gd: ", acc_gd.mean())
     print("Acc adam: ", acc_adam.mean())
+    print("Acc early gd: ", acc_early_gd.mean())
+    print("Acc early_adam: ", acc_early_adam.mean())
 
 if __name__ == "__main__":
     main()

@@ -40,6 +40,8 @@ This assumes positive losses (like MSE), but breaks with negative log likelihood
 
 **Lesson**: Always verify paper assumptions match your implementation
 
+## l was 0.1
+
 ## What the loss actually is
 
 ## What the predictions really are
