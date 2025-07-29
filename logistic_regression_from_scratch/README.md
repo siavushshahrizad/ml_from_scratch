@@ -9,7 +9,7 @@ I then compared four variants of this base implementation. The variants used dif
 - **Gradient descent with early stopping**
 - **Adam with with early stopping**
 
-The 50 static epochs was just randomly chosen. The early stopping variants used a validation set and exited training once the model stopped improving significantly. I used five random seeds and then evaluated average performance on loss, precision, and accuracy using the test set. Finally, I compared my logistic regression variants against bench marks. 
+The 50 static epochs were randomly chosen. The early stopping variants used a validation set and exited training once the model stopped improving significantly. I used five random seeds and then evaluated average performance on loss, precision, and accuracy using the test set. Finally, I compared my logistic regression variants against bench marks. 
 
 # TL;DR
 My implementation is competitive with benchmarks, even achieving a tiny higher accuracy. Adam with early stopping is an efficient optimiser that makes training feasible.
@@ -18,12 +18,12 @@ My implementation is competitive with benchmarks, even achieving a tiny higher a
 I used the 1992 [Breast Cancer Wisconsin](https://archive.ics.uci.edu/dataset/15/breast+cancer+wisconsin+original) dataset. The data was surprisingly well-annotated. See the data folder. The task of the logistic regression, therefore, was to classify biopsy samples for potential breast cancer as benign or malevolent. 
 
 # Sources
-I used Grosse's lecture [notes](https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf) to implement the general logistic regression framework. I used the original [Kingma and Ba (2017)](https://arxiv.org/abs/1412.6980) paper to implement adam. I also used the [Prechelt paper](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5) for early stopping initially but later adapted it.
+I used Grosse's lecture [notes](https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf) to implement the general logistic regression framework. I used the original [Kingma and Ba (2017)](https://arxiv.org/abs/1412.6980) paper to implement Adam. I also used the [Prechelt paper](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5) for early stopping initially but later adapted it.
 
 # Findings
 
 ### All models are better than randomness
-Randomly, initiated weights achieve a test set loss, precision, and accuracy of 1.68, 0.36, and 0.42 respectively. All logistic regression variants outpeform this. See below.
+Randomly initiated weights achieve a test set loss, precision, and accuracy of 1.68, 0.36, and 0.42 respectively. All logistic regression variants outpeform this. See below.
 
 ### Adam converges much quicker 
 While gradient descent with early stopping on average takes around 15,000 epochs to converge, Adam with early stopping converges on average within 30 epochs. On computationally intensive problems, Adam would be the only choice.
@@ -31,11 +31,11 @@ While gradient descent with early stopping on average takes around 15,000 epochs
 ### The variants perform similarly on metrics
 I think the metrics that really matter here are precision and accuracy. All variants do equally well on precision.
 
-![precision](.charts/fig2meanprecision.png)
+![precision](charts/fig2meanprecision.png)
 
 Re accuracy, a textbook might tell us that 50 epochs of gradient descent underfit the data. Another way of looking at it is that after 50 epochs you get most of your bang for your buck and several thousands of epochs won't make your model much better - aka extremely diminishing returns.
 
-![accuracy](.charts/fig3meanaccuacy.png)
+![accuracy](charts/fig3meanaccuacy.png)
 
 ### The logistic variants are competitive
 My variants achieve about 0.95 on precision and 0.98 on accuracy. This is in line with the benchmarks published on [the official repository](https://archive.ics.uci.edu/dataset/15/breast+cancer+wisconsin+original) for the data: various models such as logistic regression, random forests, or neural networks also achieve results between 0.95 and 0.955 for precision and 0.96 and 0.965 for accuracy. In fact, my accuracy is slightly higher. However, resisting the temptation to feel smug, I would simply ignore this and settle for that the variants are generally competitive. (Even if not a fluke, does a one-basis-point improvement matter?)
@@ -65,5 +65,4 @@ logistic_regression/
 ├── lr_tests.py                         # Unit tests 
 ├── README.md
 └── requirements.txt                    # Libraries needed for running programme
-└── logistic_regression.pdf             # My mathematical notes
 ```
