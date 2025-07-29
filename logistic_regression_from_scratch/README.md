@@ -18,12 +18,12 @@ My implementation is competitive with benchmarks, even achieving a tiny higher a
 I used the 1992 [Breast Cancer Wisconsin](https://archive.ics.uci.edu/dataset/15/breast+cancer+wisconsin+original) dataset. The data was surprisingly well-annotated. See the data folder. The task of the logistic regression, therefore, was to classify biopsy samples for potential breast cancer as benign or malevolent. 
 
 # Sources
-I used Grosse's lecture [notes](https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf) to implement the general logistic regression framework. I used the original [Kingma and Ba (2017)](https://arxiv.org/abs/1412.6980) paper to implement Adam. I also initially used the [Prechelt](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5) for early stopping although I later used a patience-based approach.
+I used Grosse's lecture [notes](https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf) to implement the general logistic regression framework. I used the original [Kingma and Ba (2017)](https://arxiv.org/abs/1412.6980) paper to implement Adam. I also initially used the [Prechelt](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5) paper for early stopping although I later used a patience-based approach.
 
 # Findings
 
 ### All models are better than randomness
-Randomly initiated weights achieve a test set loss, precision, and accuracy of 1.68, 0.36, and 0.42 respectively. All logistic regression variants outperform this. See below.
+Randomly initiated weights achieve a test loss, precision, and accuracy of 1.68, 0.36, and 0.42 respectively. All trained logistic regression variants outperform this. See below.
 
 ### Adam converges much quicker 
 While gradient descent with early stopping on average takes around 15,000 epochs to converge, Adam with early stopping converges on average within 30 epochs. On computationally intensive problems, Adam would be the only choice.
