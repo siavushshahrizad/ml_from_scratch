@@ -21,4 +21,6 @@ def create_bar_chart(title, x, y):
     plt.ylim(min_val, max_val)
     plt.bar(x, y)
     plt.title(title)
-    plt.savefig(LOCATION + title + FORMAT)
+    filename = LOCATION + title + FORMAT
+    filename = filename.lower().replace(" ", "")
+    plt.savefig(filename)

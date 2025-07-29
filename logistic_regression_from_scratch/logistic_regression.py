@@ -153,7 +153,7 @@ def main():
    
     # Print performance of random weights to console
     print(
-        "This experiment tracks how different optimisers influencei "
+        "This experiment tracks how different optimisers influence "
         "the performance of logistic regression."
     )
     print()
@@ -181,7 +181,7 @@ def main():
             loss_adam.mean(),
             loss_early_adam.mean()
     ]
-    title = "Fig 1. Mean losses"
+    title = "Fig 1 Mean losses"
     create_bar_chart(
         title, 
         NAMES, 
@@ -195,7 +195,7 @@ def main():
         precision_early_gd.mean(),
         precision_early_adam.mean()
     ]
-    title = "Fig 2. Mean precision"
+    title = "Fig 2 Mean precision"
     create_bar_chart(
         title, 
         NAMES, 
@@ -209,7 +209,7 @@ def main():
         acc_early_gd.mean(),
         acc_early_adam.mean(),
     ]
-    title = "Fig 3. Mean accuracy"
+    title = "Fig 3 Mean accuracy"
     create_bar_chart(
         title, 
         NAMES, 
