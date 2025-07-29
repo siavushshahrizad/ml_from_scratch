@@ -27,11 +27,13 @@ from utils import (
     calculate_precision,
     calculate_accuracy
 )
+from charting import create_bar_chart
 
 
 TRAIN_TO_OTHER_SET_RATIO = 0.8
 VAL_TO_TEST_SET_RATIO = 0.5
 NUM_TRIALS = 5 
+NAMES = ["GD", "ES GD", "Adam", "ES Adam"]
 
 
 np.random.seed(42)      # Set for reproducability
@@ -148,26 +150,72 @@ def main():
     ###     Print results to disk     ###
     #                                   #
     #####################################
-    print("Random loss: ", loss_random.mean())
-    print("GD loss: ", loss_gd.mean())
-    print("Loss adam: ", loss_adam.mean())
-    print("Loss early gd: ", loss_early_gd.mean())    
-    print("Loss early adam: ", loss_early_adam.mean())    
+   
+    # Print performance of random weights to console
+    print(
+        "This experiment tracks how different optimisers influencei "
+        "the performance of logistic regression."
+    )
     print()
-    print("Epochs early GD: ", epochs_early_gd.mean())     
-    print("Epochs adam: ", epochs_early_adam.mean()) 
+    print("Random weights perform as follows accross five seeds...")
+    print("Mean loss: ", loss_random.mean()) 
+    print("Mean precision ", precision_random.mean()) 
+    print("Mean accuracy: ", acc_random.mean()) 
     print()
-    print("Precision random: ", precision_random.mean())
-    print("Precision gd: ", precision_gd.mean())
-    print("Precision adam: ", precision_adam.mean())
-    print("Precision early gd: ", precision_early_gd.mean())
-    print("Precision early adam: ", precision_early_adam.mean())
+    print(
+        "Now please look at the saved charts to compare this "
+        "to the performance of a trained model with different " 
+        "optimisers."
+    )
     print()
-    print("Acc random: ", acc_random.mean())
-    print("Acc gd: ", acc_gd.mean())
-    print("Acc adam: ", acc_adam.mean())
-    print("Acc early gd: ", acc_early_gd.mean())
-    print("Acc early_adam: ", acc_early_adam.mean())
 
+    # Print mean epochs to console
+    print("Early stopping variants run for following epochs...")
+    print("GD: ", epochs_early_gd.mean())
+    print("Adam: ", epochs_early_adam.mean())
+
+    # Mean losses
+    mean_losses = [
+            loss_gd.mean(),
+            loss_early_gd.mean(),
+            loss_adam.mean(),
+            loss_early_adam.mean()
+    ]
+    title = "Fig 1. Mean losses"
+    create_bar_chart(
+        title, 
+        NAMES, 
+        mean_losses,
+    )
+
+    # Mean Precision
+    mean_precision = [
+        precision_gd.mean(),
+        precision_adam.mean(),
+        precision_early_gd.mean(),
+        precision_early_adam.mean()
+    ]
+    title = "Fig 2. Mean precision"
+    create_bar_chart(
+        title, 
+        NAMES, 
+        mean_precision,
+    )
+
+    # Mean accuracy
+    mean_acc = [
+        acc_gd.mean(),
+        acc_adam.mean(),
+        acc_early_gd.mean(),
+        acc_early_adam.mean(),
+    ]
+    title = "Fig 3. Mean accuracy"
+    create_bar_chart(
+        title, 
+        NAMES, 
+        mean_acc,
+    )
+
+    
 if __name__ == "__main__":
     main()
