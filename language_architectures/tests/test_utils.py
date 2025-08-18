@@ -5,10 +5,8 @@ Summary:  Tests utils
 """
 
 import pytest
-from architectures.utils import (
-    split_data,
-    split_words,
-)
+from utils.utils_data_processing import split_data, split_words
+
 
 class TestUtils:
     @pytest.mark.slow
@@ -26,5 +24,5 @@ class TestUtils:
         separated = split_words(words)
         assert len(separated) == 2
         assert isinstance(separated, list)
-        assert separated[0] == ["This", "is", "a", "test", "."]
-        assert separated[1] == ["This", "is", "another", "test", "."]
+        assert separated[0] == ["This", "is", "a", "test"]
+        assert separated[1] == ["This", "is", "another", "test"]

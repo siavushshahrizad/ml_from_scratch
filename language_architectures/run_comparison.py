@@ -9,15 +9,14 @@ using the brown corpus.
 """
 
 from architectures.nn import NeuralNetwork
-from architectures.utils import split_data
+from utils.utils_data_processing import split_data
 
 
 def main():
     train, val, test = split_data()
     nn = NeuralNetwork()
     toy = train[:10000]         # TODO: Remove just for testing
-    nn.build_vocabulary(toy)
-    nn.predict("I like bananas")
+    nn.initialise(toy)
 
 
 if __name__ == "__main__":

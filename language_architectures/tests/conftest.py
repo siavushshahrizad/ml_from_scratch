@@ -44,6 +44,6 @@ def simple_vocab():
 
 @pytest.fixture
 def simple_input():
-    words = ["This is a test.", "This is  another test."]
+    words = ["This is a test", "This is  another test"]
     return words
 

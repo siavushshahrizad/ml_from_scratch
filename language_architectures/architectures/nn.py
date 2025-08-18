@@ -9,7 +9,7 @@ import numpy as np
 from collections import Counter
 from typing import List
 from src.constants import UNK, BOS
-from architectures.utils import split_words
+from utils.utils_data_processing import split_words
 
 
 class NeuralNetwork:
@@ -26,7 +26,7 @@ class NeuralNetwork:
         context (int): number of preceding words.
     """
 
-    def __init__(self, embedding_size:int=60, hidden_size:int=72, context:int=8) -> None:
+    def __init__(self, embedding_size:int=60, hidden_size:int=72, context:int=4) -> None:
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
         self.context = context
@@ -37,8 +37,11 @@ class NeuralNetwork:
         self.C = None  # Vector representation matrix
         self.int_to_word = None  # Mapping
         self.word_to_int = None
+        self.H = None   # Hidden matrix
+        self.U = None   # Output matrix
 
-    def build_vocabulary(self, vocab: List[str], min_freq:int=3) -> None:
+
+    def _build_vocabulary(self, vocab: List[str], min_freq:int=3) -> None:
         """
         Uses the brown corpus to build vocab.
         This means it calculates and assigns
@@ -57,7 +60,30 @@ class NeuralNetwork:
         self.word_to_int = {word: num for num, word in enumerate(unique)}
         self.int_to_word = {num: word for num, word in enumerate(unique)}
         self.size = len(unique) 
+
+
+    def _initialise_C_matrix(self) -> None:
         self.C = np.random.rand(self.size, self.embedding_size)
+
+
+    def _initialise_H_matrix(self) -> None:
+        self.H = np.random.rand(self.hidden_size, (self.context * self.embedding_size) + 1)
+
+
+    def _initialise_U_matrix(self) -> None:
+        self.U = np.random.rand(self.size, self.hidden_size + 1)
+
+
+    def initialise(self, vocab: List[str]) -> None:
+        """
+        Orchestrator that stars up the model, e.g.
+        build vocab, initialise weights.
+        """
+        self._build_vocabulary(vocab)
+        self._initialise_C_matrix()
+        self._initialise_H_matrix()
+        self._initialise_U_matrix()
+
 
     def _predict_is_valid(self, context_words: List[str]) -> tuple[bool, str]:
         """
@@ -77,7 +103,8 @@ class NeuralNetwork:
 
         return True, ""
 
-    def _concat_embeddings(self, batch: List[List[str]]) -> np.ndarray:
+
+    def _forward_embedding_layer(self, batch: List[List[str]]) -> np.ndarray:
         """
         Func does the forward computation for the embedding layer.
         Technically it is just retrieving word vectors and 
@@ -104,18 +131,47 @@ class NeuralNetwork:
                 word_vec = self.C[word_id]
                 batched_embeddings[i, j] = word_vec
 
-        return batched_embeddings.reshape(batch_size, -1)
+        flattened = batched_embeddings.reshape(batch_size, -1)
+        with_bias = np.concatenate([np.ones((batch_size, 1)), flattened], axis=1)
+        return with_bias
 
-    def predict(self, context_words: List[str]):
+
+    def _forward_hidden_layer(self, X: np.ndarray) -> np.ndarray:
+        pre_activation = X @ self.H.T
+        activation = np.tanh(pre_activation)
+        return activation
+    
+
+    def _softmax(self, logits):
+        """
+        Implements a stable version by subtracting a 
+        max value to prevent overflow.
+        """
+        clipped = logits - np.max(logits, axis=1, keepdims=True)
+        numerator = np.exp(clipped)
+        denominator = np.sum(numerator, axis=1, keepdims=True)
+        return numerator / denominator
+
+
+    def _forward_output_units(self, activations: np.ndarray) -> np.ndarray:
+        batch = len(activations)
+        with_bias = np.concatenate([np.ones((batch, 1)), activations], axis=1)
+        logits =  with_bias @ self.U.T
+        probabilities = self._softmax(logits)
+        return probabilities
+
+
+    def predict(self, context_words: List[str]) -> np.ndarray:
         valid, err = self._predict_is_valid(context_words)
         if not valid:
             raise Exception(err)
+        
+        raw_inputs = split_words(context_words)
+        X = self._forward_embedding_layer(raw_inputs)
+        activations = self._forward_hidden_layer(X)
+        probabilities = self._forward_output_units(activations)
+        return probabilities
 
-        seperated = split_words(context_words)
-        word_vecs = self._concat_embeddings(seperated)
-
-
-        return 1 
 
     def _loss(self):
         pass
